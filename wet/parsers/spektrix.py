@@ -24,8 +24,14 @@ types that are restricted to particular people — access, companion, student,
 under-30s, schools, groups — and keep the ones anyone can buy, including
 genuinely cheap standing tickets. Merchandise and programmes are dropped too:
 one Park Theatre instance offered nothing but "Merchandise £5.00", which is
-not a ticket price at all, and is exactly how a nonsense number would get onto
-the website unnoticed.
+not a ticket price at all.
+
+Some venues really do sell very cheap "Full Price" tickets — Royal Court has
+listed 10p seats alongside £64.50 ones for the same performance, confirmed
+by the venue. Do not add a minimum price cutoff to "protect" against this;
+it would silently discard a genuine and rather important number. The only
+things filtered out are restricted ticket types and non-ticket line items,
+by name — never by how low the price is.
 
 UNLIKE THE COMMERCIAL SITES
 ---------------------------
@@ -60,12 +66,6 @@ RESTRICTED = re.compile(
     re.I,
 )
 
-# Below this, it is not a ticket price. Royal Court's list carries a £0.10 row
-# labelled "Full Price" — a placeholder of some kind, not a seat anyone buys.
-# It is under a perfectly ordinary ticket type, so only the amount gives it
-# away, and it would otherwise have been published as a 10p theatre ticket.
-MIN_PLAUSIBLE_PRICE = 3.0
-
 # How many upcoming performances per show to price each run, and the pause
 # between those extra calls.
 PRICE_SAMPLE = 8
@@ -83,7 +83,7 @@ def cheapest_public_price(payload: dict | None) -> float | None:
     for row in payload.get("prices") or []:
         amt = row.get("amount")
         name = ((row.get("ticketType") or {}).get("name") or "")
-        if not isinstance(amt, (int, float)) or amt < MIN_PLAUSIBLE_PRICE:
+        if not isinstance(amt, (int, float)) or amt <= 0:
             continue
         if RESTRICTED.search(name):
             continue

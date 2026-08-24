@@ -86,18 +86,22 @@ def test_spektrix_price_ignores_restricted_tickets():
 
 def test_spektrix_price_rejects_non_tickets():
     """A Park Theatre instance offered only "Merchandise 5.00". That is not a
-    ticket price and must not be published as one."""
+    ticket price and must not be published as one — rejected by ticket type
+    name, never by being a low number."""
     assert cheapest_public_price({"prices": [
         {"amount": 5.0, "ticketType": {"name": "Merchandise"}}]}) is None
     assert cheapest_public_price({"prices": []}) is None
     assert cheapest_public_price(None) is None
+    # A genuinely cheap real ticket must NOT be caught by any price floor.
+    assert cheapest_public_price({"prices": [
+        {"amount": 0.10, "ticketType": {"name": "Full Price"}}]}) == 0.10
 
 
-def test_spektrix_price_rejects_placeholder_and_concessions():
-    """Real Royal Court list, Nov 2026. It hides two separate traps: a £0.10
-    row labelled "Full Price" (a placeholder, catchable only by its size) and
-    concessions worded so they dodge the obvious keywords. The honest answer
-    is £22.50."""
+def test_spektrix_price_ignores_worded_concessions():
+    """Real Royal Court list, Nov 2026. Genuinely on sale at 10p (confirmed by
+    the venue) alongside a duplicate 22.50 "Full Price" row and concessions
+    worded so they dodge the obvious keywords. The 10p row is real and must
+    survive; only the concessions are dropped."""
     rows = ([{"amount": a, "ticketType": {"name": "Full Price"}}
              for a in (64.5, 49.0, 35.0, 22.5, 0.10, 22.5)] +
             [{"amount": a, "ticketType": {"name": n}}
@@ -106,7 +110,7 @@ def test_spektrix_price_rejects_placeholder_and_concessions():
              for a in (59.5, 44.0, 30.0, 17.5)] +
             [{"amount": a, "ticketType": {"name": "Ticket for Access Booker"}}
              for a in (32.25, 24.5, 17.5, 11.25)])
-    assert cheapest_public_price({"prices": rows}) == 22.5
+    assert cheapest_public_price({"prices": rows}) == 0.10
 
 
 def _seed(conn):
