@@ -1,0 +1,473 @@
+# ---------------------------------------------------------------------------
+# The show registry.
+#
+# operator:  atg | lw
+# key:       your own stable id, used in the database. Once a show has been
+#            collected under a key, don't rename it — the history is tied to it.
+#
+# The ATG entries below were read off atgtickets.com on 23 Aug 2026 and each
+# one was checked to return a working calendar before being added here.
+# ---------------------------------------------------------------------------
+
+shows:
+  # --- ATG (verified working) ----------------------------------------------
+  - key: wicked-apollo-victoria
+    operator: atg
+    title: "Wicked"
+    venue: "Apollo Victoria Theatre"
+    atg_show_slug: "wicked"
+    atg_venue_slug: "apollo-victoria-theatre"
+
+  - key: lion-king-lyceum
+    operator: atg
+    title: "Disney's The Lion King"
+    venue: "Lyceum Theatre"
+    atg_show_slug: "disneys-the-lion-king"
+    atg_venue_slug: "lyceum-theatre"
+
+  - key: stranger-things-phoenix
+    operator: atg
+    title: "Stranger Things: The First Shadow"
+    venue: "Phoenix Theatre"
+    atg_show_slug: "stranger-things-the-first-shadow"
+    atg_venue_slug: "phoenix-theatre"
+
+  - key: moulin-rouge-piccadilly
+    operator: atg
+    title: "Moulin Rouge! The Musical"
+    venue: "Piccadilly Theatre"
+    atg_show_slug: "moulin-rouge-the-musical"
+    atg_venue_slug: "piccadilly-theatre"
+
+  - key: cabaret-playhouse
+    operator: atg
+    title: "Cabaret"
+    venue: "Playhouse Theatre (Kit Kat Club)"
+    atg_show_slug: "cabaret"
+    atg_venue_slug: "kit-kat-club-at-the-playhouse"
+
+  - key: oh-mary-trafalgar
+    operator: atg
+    title: "Oh, Mary!"
+    venue: "Trafalgar Theatre"
+    atg_show_slug: "oh-mary"
+    atg_venue_slug: "trafalgar-theatre"
+
+  - key: paranormal-activity-ambassadors
+    operator: atg
+    title: "Paranormal Activity"
+    venue: "Ambassadors Theatre"
+    atg_show_slug: "paranormal-activity"
+    atg_venue_slug: "ambassadors-theatre"
+
+  - key: abigails-party-harold-pinter
+    operator: atg
+    title: "Abigail's Party"
+    venue: "Harold Pinter Theatre"
+    atg_show_slug: "abigails-party"
+    atg_venue_slug: "harold-pinter-theatre"
+
+  - key: arcadia-duke-of-yorks
+    operator: atg
+    title: "Arcadia"
+    venue: "Duke of York's Theatre"
+    atg_show_slug: "arcadia"
+    atg_venue_slug: "duke-of-yorks-theatre"
+
+  # Only 2 performances on sale as at 23 Aug 2026, all at £180 — looks like a
+  # limited on-sale rather than the full run. Worth re-checking in a week.
+  - key: paddington-savoy
+    operator: atg
+    title: "Paddington The Musical"
+    venue: "Savoy Theatre"
+    atg_show_slug: "paddington-the-musical"
+    atg_venue_slug: "savoy-theatre"
+
+  # --- Nimax (verified working 23 Aug 2026) --------------------------------
+  # Nimax exposes a public JSON API, so these are cheap to collect. NOTE: the
+  # API's own "lowestPricePoint" is NOT a buyable price and is deliberately
+  # ignored — see the comment at the top of wet/parsers/nimax.py.
+  - key: six-vaudeville
+    operator: nimax
+    title: "SIX the Musical"
+    venue: "Vaudeville Theatre"
+    nimax_series_code: "VASQU01M"
+
+  - key: hadestown-lyric
+    operator: nimax
+    title: "Hadestown"
+    venue: "Lyric Theatre"
+    nimax_series_code: "LYHDT01M"
+
+  - key: producers-garrick
+    operator: nimax
+    title: "Mel Brooks' The Producers"
+    venue: "Garrick Theatre"
+    nimax_series_code: "GATPR01M"
+
+  - key: harry-potter-palace
+    operator: nimax
+    title: "Harry Potter and the Cursed Child"
+    venue: "Palace Theatre"
+    nimax_series_code: "PAHAR02M"
+
+  - key: play-that-goes-wrong-duchess
+    operator: nimax
+    title: "The Play That Goes Wrong"
+    venue: "Duchess Theatre"
+    nimax_series_code: "DUWRO01M"
+
+  - key: the-truth-apollo
+    operator: nimax
+    title: "The Truth"
+    venue: "Apollo Theatre"
+    nimax_series_code: "APTRU01M"
+
+  - key: one-day-garrick
+    operator: nimax
+    title: "One Day - The Musical"
+    venue: "Garrick Theatre"
+    nimax_series_code: "GAODM01M"
+
+
+  # --- Delfont Mackintosh (verified working 23 Aug 2026) --------------------
+  # Same JSON platform as Nimax. Its "lowestPricePoint" field is junk (£0.01
+  # for Hamilton) and is deliberately ignored - see wet/parsers/ticketing_api.py.
+  # NOTE: Phantom of the Opera is at His Majesty's, an LW house, so it is not
+  # sold by Delfont and is not listed here.
+  - key: hamilton-victoria-palace
+    operator: dm
+    title: "Hamilton"
+    venue: "Victoria Palace Theatre"
+    dm_series_code: "VPHAM"
+
+  - key: les-miserables-sondheim
+    operator: dm
+    title: "Les Misérables"
+    venue: "Sondheim Theatre"
+    dm_series_code: "SONLM"
+
+  - key: beetlejuice-prince-edward
+    operator: dm
+    title: "Beetlejuice"
+    venue: "Prince Edward Theatre"
+    dm_series_code: "PETBJ"
+
+  - key: book-of-mormon-prince-of-wales
+    operator: dm
+    title: "The Book of Mormon"
+    venue: "Prince of Wales Theatre"
+    dm_series_code: "POWBOM"
+
+  - key: mamma-mia-novello
+    operator: dm
+    title: "MAMMA MIA!"
+    venue: "Novello Theatre"
+    dm_series_code: "NOVMM"
+
+  - key: oliver-gielgud
+    operator: dm
+    title: "Oliver!"
+    venue: "Gielgud Theatre"
+    dm_series_code: "GIEOLI"
+
+  - key: cyrano-noel-coward
+    operator: dm
+    title: "Cyrano de Bergerac"
+    venue: "Noël Coward Theatre"
+    dm_series_code: "COWCDB"
+    # short run, ends autumn 2026
+
+  - key: mockingbird-wyndhams
+    operator: dm
+    title: "To Kill A Mockingbird"
+    venue: "Wyndham's Theatre"
+    dm_series_code: "WYNTKAMB"
+    # short run, ends autumn 2026
+
+  - key: hay-fever-wyndhams
+    operator: dm
+    title: "Hay Fever"
+    venue: "Wyndham's Theatre"
+    dm_series_code: "WYNHF"
+
+  - key: into-the-woods-noel-coward
+    operator: dm
+    title: "Into The Woods"
+    venue: "Noël Coward Theatre"
+    dm_series_code: "COWITW"
+
+  - key: august-osage-county-noel-coward
+    operator: dm
+    title: "August: Osage County"
+    venue: "Noël Coward Theatre"
+    dm_series_code: "COWAOC"
+    # opens Jan 2027
+
+  - key: christmas-carol-goes-wrong-wyndhams
+    operator: dm
+    title: "A Christmas Carol Goes Wrong"
+    venue: "Wyndham's Theatre"
+    dm_series_code: "WYNCCGW"
+    # seasonal, Dec/Jan
+
+  - key: amadeus-noel-coward
+    operator: dm
+    title: "Amadeus"
+    venue: "Noël Coward Theatre"
+    dm_series_code: "COWAMA"
+    # opens Apr 2027 - outside the 6 month window for now
+
+  - key: john-proctor-wyndhams
+    operator: dm
+    title: "John Proctor is the Villain"
+    venue: "Wyndham's Theatre"
+    dm_series_code: "WYNJPV"
+    # opens Feb 2027
+
+  - key: miss-saigon-prince-edward
+    operator: dm
+    title: "Miss Saigon"
+    venue: "Prince Edward Theatre"
+    dm_series_code: "PETMISS"
+    # NOT ON SALE yet - kept so we catch prices from day one
+
+  # --- @sohoplace and Menier Chocolate Factory -----------------------------
+  # Both run the same JSON platform as Nimax/Delfont, just on their own
+  # domains, so they cost nothing beyond a base URL. Menier is off-West-End.
+  - key: tao-of-glass-sohoplace
+    operator: sohoplace
+    title: "Tao of Glass"
+    venue: "@sohoplace"
+    sohoplace_series_code: "SPTOG01M"
+
+  - key: virginia-woolf-sohoplace
+    operator: sohoplace
+    title: "Who's Afraid of Virginia Woolf?"
+    venue: "@sohoplace"
+    sohoplace_series_code: "SPVWF01M"
+
+  - key: midnight-never-get-menier
+    operator: menier
+    title: "Midnight at the Never Get"
+    venue: "Menier Chocolate Factory"
+    menier_series_code: "MATNG"
+
+  - key: tru-menier
+    operator: menier
+    title: "Tru"
+    venue: "Menier Chocolate Factory"
+    menier_series_code: "TRU"
+
+  # --- Nederlander / Shaftesbury / Charing Cross ---------------------------
+  # All on the same shared TixTrack platform as Nimax and Delfont.
+  # Each venue also sells one-off comedy and concert nights (Rory Stewart,
+  # Neil Diamond tribute, dance awards). Those are left out deliberately:
+  # a single-date event has almost no price history worth keeping.
+  - key: devil-wears-prada-dominion
+    operator: nederlander
+    title: "The Devil Wears Prada"
+    venue: "Dominion Theatre"
+    nederlander_series_code: "TheDevilWearsPrada"
+
+  - key: sinatra-aldwych
+    operator: nederlander
+    title: "Sinatra The Musical"
+    venue: "Aldwych Theatre"
+    nederlander_series_code: "SinatraTheMusical"
+
+  - key: avenue-q-shaftesbury
+    operator: shaftesbury
+    title: "Avenue Q"
+    venue: "Shaftesbury Theatre"
+    shaftesbury_series_code: "AVEQ"
+
+  - key: jeeves-charing-cross
+    operator: charingcross
+    title: "Jeeves Takes Charge"
+    venue: "Charing Cross Theatre"
+    charingcross_series_code: "JTC"
+
+  # --- Spektrix venues -----------------------------------------------------
+  # IMPORTANT: Spektrix does not publish prices through its open API, so these
+  # shows record performance dates and on-sale status only, with no price.
+  # That still gives the sell-out curve. See wet/parsers/spektrix.py.
+  #
+  # Event ids are pinned deliberately: a Spektrix event list also contains
+  # backstage tours, workshops and interval-drinks pre-orders.
+  - key: oresteia-bridge
+    operator: spektrix
+    title: "The Oresteia"
+    venue: "Bridge Theatre"
+    spektrix_client: "bridgetheatrelondon"
+    spektrix_event_id: "21601ATQCRBPJGGKQCSQSNJJDGKGBDPBP"
+
+  - key: pride-bridge
+    operator: spektrix
+    title: "Pride"
+    venue: "Bridge Theatre"
+    spektrix_client: "bridgetheatrelondon"
+    spektrix_event_id: "23601ABQMTDMTTDQVVNJCNJPSQCSVMLHB"
+
+  - key: ivanov-bridge
+    operator: spektrix
+    title: "Ivanov"
+    venue: "Bridge Theatre"
+    spektrix_client: "bridgetheatrelondon"
+    spektrix_event_id: "21201ARBBTMBLNJJTVHKLSDDJRJTLMNRD"
+
+  - key: titanique-criterion
+    operator: spektrix
+    title: "Titaníque"
+    venue: "Criterion Theatre"
+    spektrix_client: "criteriontheatre"
+    spektrix_event_id: "11601ASNTDDTNQDPTRBBMHTCLMHBVDMHV"
+
+  - key: holy-fool-park
+    operator: spektrix
+    title: "Holy Fool"
+    venue: "Park Theatre"
+    spektrix_client: "parktheatre"
+    spektrix_event_id: "132401AGSMQBNPQGJNRBPGJNKHPLKSSKD"
+
+
+  # --- Royal Court and Soho Theatre (Spektrix, dates only, no prices) ------
+  # Picked by run length: only events with 8+ performances in the window, and
+  # with tours, workshops, memberships and interval drinks filtered out. Soho
+  # in particular lists ~1,200 sellable things, most of them not productions.
+  - key: man-to-man-royal-court
+    operator: spektrix
+    title: "Man to Man"
+    venue: "Royal Court Theatre"
+    spektrix_client: "royalcourt"
+    spektrix_event_id: "118056AKTSMRLCGMVPKPCRQTBNJSGPJQG"
+
+  - key: monument-royal-court
+    operator: spektrix
+    title: "Monument"
+    venue: "Royal Court Theatre"
+    spektrix_client: "royalcourt"
+    spektrix_event_id: "118856ABBBLJKCPJBHPMJMMMVDVNBDGGJ"
+
+  - key: blood-of-my-blood-royal-court
+    operator: spektrix
+    title: "Blood of my Blood"
+    venue: "Royal Court Theatre"
+    spektrix_client: "royalcourt"
+    spektrix_event_id: "118656AKHGTKJQNGMSNTVRQPNJDPNTCKB"
+
+  - key: afronauts-royal-court
+    operator: spektrix
+    title: "The Afronauts"
+    venue: "Royal Court Theatre"
+    spektrix_client: "royalcourt"
+    spektrix_event_id: "118256AVPJQPMKMHMRGNRSBHQGHNKJVPJ"
+
+  - key: roleplay-soho
+    operator: spektrix
+    title: "ROLEPLAY"
+    venue: "Soho Theatre"
+    spektrix_client: "sohotheatre"
+    spektrix_event_id: "742003AHPTGQDSNSTSDJJLMBBRTBLHBST"
+
+  - key: ham-soho
+    operator: spektrix
+    title: "HAM"
+    venue: "Soho Theatre"
+    spektrix_client: "sohotheatre"
+    spektrix_event_id: "734603AVBQKCVKGVLLQKPKPCGPQVLHNSR"
+
+  - key: nutcracker-soho
+    operator: spektrix
+    title: "The Nutcracker"
+    venue: "Soho Theatre"
+    spektrix_client: "sohotheatre"
+    spektrix_event_id: "741003APPLVCPTDPVLPDTQNQGTTLLTLHC"
+
+  - key: youre-so-special-soho
+    operator: spektrix
+    title: "You're So Special"
+    venue: "Soho Theatre"
+    spektrix_client: "sohotheatre"
+    spektrix_event_id: "728803ACNBPBSRCBSGQVNPVNVQSNBLDLH"
+
+
+  # --- Donmar, Southwark Playhouse and Barbican (Spektrix, dates only) -----
+  # Barbican is an arts centre, so its event list is mostly exhibitions,
+  # car parking and champagne. Only the theatre production is pinned here.
+  - key: kings-ransom-donmar
+    operator: spektrix
+    title: "THE KING'S RANSOM"
+    venue: "Donmar Warehouse"
+    spektrix_client: "donmarwarehouse"
+    spektrix_event_id: "29201ACCPRBMSLVHDLHKGSRKDGGQQMTJM"
+
+  - key: ilford-boy-donmar
+    operator: spektrix
+    title: "ILFORD BOY"
+    venue: "Donmar Warehouse"
+    spektrix_client: "donmarwarehouse"
+    spektrix_event_id: "27601AQVLTVTCJRHPTLCPRBPBJCDTNLPC"
+
+  - key: month-in-country-donmar
+    operator: spektrix
+    title: "A Month in the Country"
+    venue: "Donmar Warehouse"
+    spektrix_client: "donmarwarehouse"
+    spektrix_event_id: "27401ARJLQPVGRGCMSLCMHMNMQVRHNDVC"
+
+  - key: no-mans-land-donmar
+    operator: spektrix
+    title: "No Man's Land"
+    venue: "Donmar Warehouse"
+    spektrix_client: "donmarwarehouse"
+    spektrix_event_id: "29401ADJVTMPMVSKRPCKNPVMCRPLRQJRR"
+
+  - key: jane-eyre-southwark
+    operator: spektrix
+    title: "Jane Eyre"
+    venue: "Southwark Playhouse"
+    spektrix_client: "southwarkplayhouse"
+    spektrix_event_id: "42601AHHMJKDLCSMPCMNQQTLCLBJSNVCP"
+
+  - key: private-jones-southwark
+    operator: spektrix
+    title: "Private Jones"
+    venue: "Southwark Playhouse"
+    spektrix_client: "southwarkplayhouse"
+    spektrix_event_id: "47001AKGBPVRNLLTLGMHBTDTNRJQVNRCM"
+
+  - key: twenty-thousand-streets-southwark
+    operator: spektrix
+    title: "Twenty Thousand Streets Under the Sky"
+    venue: "Southwark Playhouse"
+    spektrix_client: "southwarkplayhouse"
+    spektrix_event_id: "47401AKQNQDVQMQKDSCQGTCTQNHNCHLHR"
+
+  - key: nero-southwark
+    operator: spektrix
+    title: "NERO"
+    venue: "Southwark Playhouse"
+    spektrix_client: "southwarkplayhouse"
+    spektrix_event_id: "48201AHQBKMVGJSTQGDDLBHBMNSLMGSVN"
+
+  - key: memoriam-southwark
+    operator: spektrix
+    title: "Memoriam"
+    venue: "Southwark Playhouse"
+    spektrix_client: "southwarkplayhouse"
+    spektrix_event_id: "47601ALRPQQGLMRHLJRSGRRTJGJKMNSGT"
+
+  - key: hamlet-hail-thief-barbican
+    operator: spektrix
+    title: "Hamlet Hail to the Thief"
+    venue: "Barbican Theatre"
+    spektrix_client: "barbicancentre"
+    spektrix_event_id: "1317601AHNJNDJVGBBGRVMMQRLQQJDPQR"
+
+  # --- LW (NOT WORKING — calendar returns no prices, under investigation) ---
+  - key: matilda-cambridge
+    operator: lw
+    title: "Matilda The Musical"
+    venue: "Cambridge Theatre"
+    lw_event_id: "235"

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Raw archived HTML — useful locally for re-parsing history, but 90MB+ and
+# growing daily. Not worth versioning in git.
+data/raw/
+data/logs/
+*.db-wal
+*.db-shm
+
+# The database and the generated report ARE tracked deliberately — see
+# .github/workflows/collect.yml, which commits them back after every run.

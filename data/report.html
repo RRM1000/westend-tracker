@@ -1,0 +1,485 @@
+<title>West End Price Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Instrument+Serif&display=swap">
+<style>
+:root {
+  --ground:  #F4F7F6;
+  --surface: #FFFFFF;
+  --ink:     #14201F;
+  --muted:   #5C6B6A;
+  --rule:    #DBE4E2;
+  --accent:  #1F6F6B;
+  --cheap:   #2E7D5B;
+  --dear:    #B4472E;
+  --shadow:  0 1px 2px rgba(20,32,31,.06), 0 8px 24px rgba(20,32,31,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:  #0E1615;
+    --surface: #16211F;
+    --ink:     #E8EFEE;
+    --muted:   #93A5A3;
+    --rule:    #26332F;
+    --accent:  #4FB3A5;
+    --cheap:   #5FBF8E;
+    --dear:    #E08167;
+    --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:  #0E1615;
+  --surface: #16211F;
+  --ink:     #E8EFEE;
+  --muted:   #93A5A3;
+  --rule:    #26332F;
+  --accent:  #4FB3A5;
+  --cheap:   #5FBF8E;
+  --dear:    #E08167;
+  --shadow:  0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
+
+header { border-bottom: 2px solid var(--ink); padding-bottom: 20px; margin-bottom: 32px; }
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 10px;
+}
+h1 {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-weight: 400; font-size: clamp(34px, 5vw, 52px); line-height: 1.05;
+  margin: 0 0 8px; text-wrap: balance; letter-spacing: -.01em;
+}
+.sub { color: var(--muted); margin: 0; max-width: 62ch; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 28px 44px; margin: 28px 0 44px; }
+.stat .n {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.stat .k {
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin-top: 4px;
+}
+
+h2 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: 26px; margin: 48px 0 6px;
+}
+.note { color: var(--muted); font-size: 14px; margin: 0 0 22px; max-width: 66ch; }
+
+.shows { display: flex; flex-direction: column; gap: 14px; }
+.show {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 18px 20px; box-shadow: var(--shadow);
+  display: grid; grid-template-columns: minmax(190px, 1.1fr) auto 1fr; gap: 20px;
+  align-items: center;
+}
+.show .name { font-size: 17px; font-weight: 600; line-height: 1.25; }
+.show .venue { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.ladder {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; font-size: 15px; white-space: nowrap;
+}
+.ladder .to { color: var(--muted); padding: 0 4px; }
+.ladder .lo { color: var(--cheap); font-weight: 600; }
+.best { font-size: 12px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
+.best b { color: var(--ink); font-weight: 600; }
+.strip { min-width: 0; }
+.strip svg { display: block; width: 100%; height: 54px; overflow: visible; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px;
+             background: var(--surface); box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--rule); }
+th {
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600; white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+td.num {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
+}
+.pill {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; letter-spacing: .04em; border: 1px solid var(--rule);
+  color: var(--muted); white-space: nowrap;
+}
+.pill.good { color: var(--cheap); border-color: color-mix(in srgb, var(--cheap) 40%, transparent); }
+.pill.low  { color: var(--dear);  border-color: color-mix(in srgb, var(--dear) 40%, transparent); }
+
+footer {
+  margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--rule);
+  color: var(--muted); font-size: 13px; max-width: 70ch;
+}
+.legend { display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+          font-size: 12px; color: var(--muted); margin: 0 0 14px; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px;
+      vertical-align: -1px; margin-right: 6px; }
+</style>
+<div class="wrap">
+<header>
+<p class="eyebrow">London Theatre Geek · ticket price tracker</p>
+<h1>West End Price Watch</h1>
+<p class="sub">Cheapest advertised ticket for every performance on sale, read from the box office once a day. Covering 23 Aug 2026 – 24 Feb 2027.</p>
+</header>
+<div class="stats">
+<div class="stat"><div class="n">63</div><div class="k">shows tracked</div></div>
+<div class="stat"><div class="n">5,473</div><div class="k">performances</div></div>
+<div class="stat"><div class="n">8,362</div><div class="k">price readings</div></div>
+<div class="stat"><div class="n">1</div><div class="k">day collected</div></div>
+</div>
+<p class="note"><b>One day collected so far.</b> Price movement needs at least two. Run the collector again tomorrow and this page will start showing how prices change.</p>
+<h2>Every show, cheapest to dearest</h2>
+<p class="note">The bars show the cheapest seat available in each week of the run — taller means dearer. The highlighted bar is the cheapest week to go.</p>
+<p class="legend"><span><span class="sw" style="background:var(--cheap)"></span>cheapest week</span><span><span class="sw" style="background:var(--accent);opacity:.32"></span>other weeks</span></p>
+<div class="shows">
+<div class="show">
+<div><div class="name">August: Osage County</div><div class="venue">Noël Coward Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£15</span><span class="to">to</span>£15</div>
+<div class="best">cheapest: <b>Mon 18 Jan</b> · 8 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="7.00" y="36.00" width="36.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>18 Jan 2027 — from £15</title></rect><rect x="57.00" y="36.00" width="36.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Jan 2027 — from £15</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Cyrano de Bergerac</div><div class="venue">Noël Coward Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£15</span><span class="to">to</span>£15</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 15 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="7.00" y="36.00" width="36.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £15</title></rect><rect x="57.00" y="36.00" width="36.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £15</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Into The Woods</div><div class="venue">Noël Coward Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£15</span><span class="to">to</span>£25</div>
+<div class="best">cheapest: <b>Wed 23 Sep</b> · 40 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.75" y="36.00" width="9.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>22 Sep 2026 — from £15</title></rect><rect x="14.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Sep 2026 — from £15</title></rect><rect x="26.75" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £15</title></rect><rect x="39.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £15</title></rect><rect x="51.75" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £15</title></rect><rect x="64.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £15</title></rect><rect x="76.75" y="2.00" width="9.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £20</title></rect><rect x="89.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £15</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">MAMMA MIA!</div><div class="venue">Novello Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£15</span><span class="to">to</span>£60</div>
+<div class="best">cheapest: <b>Mon 02 Nov</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £35</title></rect><rect x="11.40" y="19.00" width="7.20" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="21.40" y="19.00" width="7.20" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="31.40" y="27.50" width="7.20" height="12.50" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £20</title></rect><rect x="41.40" y="19.00" width="7.20" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>02 Nov 2026 — from £15</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £15</title></rect><rect x="71.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £15</title></rect><rect x="81.40" y="27.50" width="7.20" height="12.50" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Jan 2027 — from £20</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £15</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Jeeves Takes Charge</div><div class="venue">Charing Cross Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£17.50</span><span class="to">to</span>£25</div>
+<div class="best">cheapest: <b>Wed 26 Aug</b> · 16 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="7.00" y="36.00" width="36.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>25 Aug 2026 — from £17.50</title></rect><rect x="57.00" y="36.00" width="36.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £17.50</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">The Book of Mormon</div><div class="venue">Prince of Wales Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£55</div>
+<div class="best">cheapest: <b>Mon 05 Oct</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.27" y="2.00" width="6.55" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £30</title></rect><rect x="10.36" y="19.00" width="6.55" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="19.45" y="19.00" width="6.55" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="28.55" y="19.00" width="6.55" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="37.64" y="36.00" width="6.55" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>05 Oct 2026 — from £20</title></rect><rect x="46.73" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £20</title></rect><rect x="55.82" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £20</title></rect><rect x="64.91" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £20</title></rect><rect x="74.00" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £20</title></rect><rect x="83.09" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £20</title></rect><rect x="92.18" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £20</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">The Devil Wears Prada</div><div class="venue">Dominion Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£29.50</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £20</title></rect><rect x="11.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="21.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="31.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="41.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="51.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £25</title></rect><rect x="61.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="71.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £25</title></rect><rect x="81.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £29.50</title></rect><rect x="91.40" y="18.11" width="7.20" height="21.89" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Hamilton</div><div class="venue">Victoria Palace Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£500</div>
+<div class="best">cheapest: <b>Thu 05 Nov</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="9.39" width="7.20" height="30.61" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £200</title></rect><rect x="11.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £250</title></rect><rect x="21.40" y="27.13" width="7.20" height="12.87" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £80</title></rect><rect x="31.40" y="32.67" width="7.20" height="7.33" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £42.50</title></rect><rect x="41.40" y="32.67" width="7.20" height="7.33" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £42.50</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>02 Nov 2026 — from £20</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £20</title></rect><rect x="71.40" y="32.67" width="7.20" height="7.33" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £42.50</title></rect><rect x="81.40" y="32.30" width="7.20" height="7.70" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £45</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £20</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">To Kill A Mockingbird</div><div class="venue">Wyndham&#x27;s Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£125</div>
+<div class="best">cheapest: <b>Mon 07 Sep</b> · 16 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="4.67" y="2.00" width="24.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £30</title></rect><rect x="38.00" y="2.00" width="24.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £30</title></rect><rect x="71.33" y="36.00" width="24.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>07 Sep 2026 — from £20</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Oliver!</div><div class="venue">Gielgud Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£35</div>
+<div class="best">cheapest: <b>Wed 02 Sep</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Aug 2026 — from £35</title></rect><rect x="11.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Sep 2026 — from £20</title></rect><rect x="21.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Sep 2026 — from £20</title></rect><rect x="31.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £20</title></rect><rect x="41.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £20</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £20</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £20</title></rect><rect x="71.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £20</title></rect><rect x="81.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £20</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £20</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">The Play That Goes Wrong</div><div class="venue">Duchess Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20</span><span class="to">to</span>£55</div>
+<div class="best">cheapest: <b>Sun 04 Oct</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Aug 2026 — from £25</title></rect><rect x="11.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Aug 2026 — from £25</title></rect><rect x="21.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="31.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Oct 2026 — from £20</title></rect><rect x="41.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £20</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £20</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £20</title></rect><rect x="71.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £20</title></rect><rect x="81.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £20</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £20</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Abigail&#x27;s Party</div><div class="venue">Harold Pinter Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20.50</span><span class="to">to</span>£20.50</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 32 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="3.50" y="36.00" width="18.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £20.50</title></rect><rect x="28.50" y="36.00" width="18.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>31 Aug 2026 — from £20.50</title></rect><rect x="53.50" y="36.00" width="18.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £20.50</title></rect><rect x="78.50" y="36.00" width="18.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Sep 2026 — from £20.50</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Arcadia</div><div class="venue">Duke of York&#x27;s Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£20.50</span><span class="to">to</span>£20.50</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 24 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="4.67" y="36.00" width="24.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £20.50</title></rect><rect x="38.00" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>31 Aug 2026 — from £20.50</title></rect><rect x="71.33" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £20.50</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Avenue Q</div><div class="venue">Shaftesbury Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£29.50</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 43 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.56" y="36.00" width="8.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £25</title></rect><rect x="12.67" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="23.78" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="34.89" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="46.00" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="57.11" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £25</title></rect><rect x="68.22" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="79.33" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £25</title></rect><rect x="90.44" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Beetlejuice</div><div class="venue">Prince Edward Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£35</div>
+<div class="best">cheapest: <b>Tue 01 Sep</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.27" y="19.00" width="6.55" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £30</title></rect><rect x="10.36" y="36.00" width="6.55" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="19.45" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="28.55" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="37.64" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="46.73" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £25</title></rect><rect x="55.82" y="19.00" width="6.55" height="21.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £30</title></rect><rect x="64.91" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="74.00" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £25</title></rect><rect x="83.09" y="2.00" width="6.55" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Jan 2027 — from £35</title></rect><rect x="92.18" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">A Christmas Carol Goes Wrong</div><div class="venue">Wyndham&#x27;s Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£60</div>
+<div class="best">cheapest: <b>Tue 05 Jan</b> · 16 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="3.50" y="2.00" width="18.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>18 Dec 2026 — from £60</title></rect><rect x="28.50" y="26.29" width="18.00" height="13.71" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Dec 2026 — from £35</title></rect><rect x="53.50" y="26.29" width="18.00" height="13.71" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £35</title></rect><rect x="78.50" y="36.00" width="18.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>05 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Hadestown</div><div class="venue">Lyric Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£35</div>
+<div class="best">cheapest: <b>Wed 26 Aug</b> · 47 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.56" y="36.00" width="8.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>25 Aug 2026 — from £25</title></rect><rect x="12.67" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="23.78" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="34.89" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £25</title></rect><rect x="46.00" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £25</title></rect><rect x="57.11" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £25</title></rect><rect x="68.22" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="79.33" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £25</title></rect><rect x="90.44" y="36.00" width="8.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Harry Potter and the Cursed Child</div><div class="venue">Palace Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£30</div>
+<div class="best">cheapest: <b>Fri 09 Oct</b> · 32 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="2.00" y="36.00" width="10.29" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>09 Oct 2026 — from £25</title></rect><rect x="16.29" y="36.00" width="10.29" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>13 Oct 2026 — from £25</title></rect><rect x="30.57" y="36.00" width="10.29" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £25</title></rect><rect x="44.86" y="36.00" width="10.29" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £25</title></rect><rect x="59.14" y="36.00" width="10.29" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="73.43" y="2.00" width="10.29" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Jan 2027 — from £30</title></rect><rect x="87.71" y="36.00" width="10.29" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Les Misérables</div><div class="venue">Sondheim Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£52.50</div>
+<div class="best">cheapest: <b>Thu 01 Oct</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £42.50</title></rect><rect x="11.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £42.50</title></rect><rect x="21.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £42.50</title></rect><rect x="31.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Oct 2026 — from £25</title></rect><rect x="41.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £25</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="71.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £25</title></rect><rect x="81.40" y="31.14" width="7.20" height="8.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £27.50</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Moulin Rouge! The Musical</div><div class="venue">Piccadilly Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£71.75</div>
+<div class="best">cheapest: <b>Thu 03 Sep</b> · 191 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.58" y="2.00" width="3.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £41</title></rect><rect x="4.75" y="36.00" width="3.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>31 Aug 2026 — from £25</title></rect><rect x="8.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect><rect x="13.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Sep 2026 — from £25</title></rect><rect x="17.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Sep 2026 — from £25</title></rect><rect x="21.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Sep 2026 — from £25</title></rect><rect x="25.58" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £25</title></rect><rect x="29.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Oct 2026 — from £25</title></rect><rect x="33.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Oct 2026 — from £25</title></rect><rect x="38.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Oct 2026 — from £25</title></rect><rect x="42.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £25</title></rect><rect x="46.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £25</title></rect><rect x="50.58" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>16 Nov 2026 — from £25</title></rect><rect x="54.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Nov 2026 — from £25</title></rect><rect x="58.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>30 Nov 2026 — from £25</title></rect><rect x="63.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £25</title></rect><rect x="67.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Dec 2026 — from £25</title></rect><rect x="71.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Dec 2026 — from £25</title></rect><rect x="75.58" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Dec 2026 — from £25</title></rect><rect x="79.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £25</title></rect><rect x="83.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>11 Jan 2027 — from £25</title></rect><rect x="88.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>18 Jan 2027 — from £25</title></rect><rect x="92.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Jan 2027 — from £25</title></rect><rect x="96.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Feb 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Mel Brooks&#x27; The Producers</div><div class="venue">Garrick Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£25</div>
+<div class="best">cheapest: <b>Mon 24 Aug</b> · 16 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="4.67" y="36.00" width="24.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £25</title></rect><rect x="38.00" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="71.33" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Stranger Things: The First Shadow</div><div class="venue">Phoenix Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£55</div>
+<div class="best">cheapest: <b>Thu 03 Sep</b> · 139 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.74" y="2.00" width="3.79" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Aug 2026 — from £52.50</title></rect><rect x="6.00" y="23.64" width="3.79" height="16.36" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Aug 2026 — from £35</title></rect><rect x="11.26" y="36.00" width="3.79" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="16.53" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Sep 2026 — from £25</title></rect><rect x="21.79" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Sep 2026 — from £25</title></rect><rect x="27.05" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Sep 2026 — from £25</title></rect><rect x="32.32" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>29 Sep 2026 — from £25</title></rect><rect x="37.58" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £30</title></rect><rect x="42.84" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>13 Oct 2026 — from £30</title></rect><rect x="48.11" y="23.64" width="3.79" height="16.36" fill="var(--accent)" opacity="0.32" rx="0.4"><title>20 Oct 2026 — from £35</title></rect><rect x="53.37" y="23.64" width="3.79" height="16.36" fill="var(--accent)" opacity="0.32" rx="0.4"><title>27 Oct 2026 — from £35</title></rect><rect x="58.63" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £30</title></rect><rect x="63.89" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Nov 2026 — from £30</title></rect><rect x="69.16" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>17 Nov 2026 — from £30</title></rect><rect x="74.42" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Nov 2026 — from £30</title></rect><rect x="79.68" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £30</title></rect><rect x="84.95" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Dec 2026 — from £30</title></rect><rect x="90.21" y="29.82" width="3.79" height="10.18" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Dec 2026 — from £30</title></rect><rect x="95.47" y="23.64" width="3.79" height="16.36" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Dec 2026 — from £35</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Tao of Glass</div><div class="venue">@sohoplace</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£49.50</div>
+<div class="best">cheapest: <b>Tue 25 Aug</b> · 16 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="4.67" y="36.00" width="24.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £25</title></rect><rect x="38.00" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="71.33" y="2.00" width="24.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £49.50</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">The Truth</div><div class="venue">Apollo Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£180</div>
+<div class="best">cheapest: <b>Thu 27 Aug</b> · 14 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="4.67" y="36.00" width="24.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £25</title></rect><rect x="38.00" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="71.33" y="36.00" width="24.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Wicked</div><div class="venue">Apollo Victoria Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£25</span><span class="to">to</span>£157</div>
+<div class="best">cheapest: <b>Tue 01 Sep</b> · 195 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Aug 2026 — from £32.50</title></rect><rect x="4.56" y="15.60" width="2.88" height="24.40" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Aug 2026 — from £29.50</title></rect><rect x="8.56" y="36.00" width="2.88" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>01 Sep 2026 — from £25</title></rect><rect x="12.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Sep 2026 — from £25</title></rect><rect x="16.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Sep 2026 — from £25</title></rect><rect x="20.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Sep 2026 — from £25</title></rect><rect x="24.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>29 Sep 2026 — from £25</title></rect><rect x="28.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £25</title></rect><rect x="32.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>13 Oct 2026 — from £25</title></rect><rect x="36.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>20 Oct 2026 — from £25</title></rect><rect x="40.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>27 Oct 2026 — from £32.50</title></rect><rect x="44.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £25</title></rect><rect x="48.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>10 Nov 2026 — from £25</title></rect><rect x="52.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>17 Nov 2026 — from £25</title></rect><rect x="56.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Nov 2026 — from £25</title></rect><rect x="60.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £25</title></rect><rect x="64.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Dec 2026 — from £25</title></rect><rect x="68.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Dec 2026 — from £32.50</title></rect><rect x="72.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Dec 2026 — from £32.50</title></rect><rect x="76.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Dec 2026 — from £32.50</title></rect><rect x="80.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £25</title></rect><rect x="84.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Jan 2027 — from £25</title></rect><rect x="88.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Jan 2027 — from £25</title></rect><rect x="92.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Jan 2027 — from £25</title></rect><rect x="96.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Feb 2027 — from £25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Paranormal Activity</div><div class="venue">Ambassadors Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£28</span><span class="to">to</span>£58</div>
+<div class="best">cheapest: <b>Tue 25 Aug</b> · 88 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.27" y="36.00" width="6.55" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>24 Aug 2026 — from £28</title></rect><rect x="10.36" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>31 Aug 2026 — from £28</title></rect><rect x="19.45" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £28</title></rect><rect x="28.55" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Sep 2026 — from £28</title></rect><rect x="37.64" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Sep 2026 — from £28</title></rect><rect x="46.73" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Sep 2026 — from £28</title></rect><rect x="55.82" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £28</title></rect><rect x="64.91" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Oct 2026 — from £28</title></rect><rect x="74.00" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Oct 2026 — from £28</title></rect><rect x="83.09" y="2.00" width="6.55" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Oct 2026 — from £36</title></rect><rect x="92.18" y="36.00" width="6.55" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £28</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Hay Fever</div><div class="venue">Wyndham&#x27;s Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£30</span><span class="to">to</span>£250</div>
+<div class="best">cheapest: <b>Tue 29 Sep</b> · 27 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="2.33" y="2.00" width="12.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Sep 2026 — from £250</title></rect><rect x="19.00" y="36.00" width="12.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>28 Sep 2026 — from £30</title></rect><rect x="35.67" y="36.00" width="12.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £30</title></rect><rect x="52.33" y="36.00" width="12.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £30</title></rect><rect x="69.00" y="36.00" width="12.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £30</title></rect><rect x="85.67" y="36.00" width="12.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £30</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Oh, Mary!</div><div class="venue">Trafalgar Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£30</span><span class="to">to</span>£92.50</div>
+<div class="best">cheapest: <b>Thu 17 Sep</b> · 152 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.74" y="2.00" width="3.79" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £56.50</title></rect><rect x="6.00" y="29.58" width="3.79" height="10.42" fill="var(--accent)" opacity="0.32" rx="0.4"><title>31 Aug 2026 — from £35</title></rect><rect x="11.26" y="23.17" width="3.79" height="16.83" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Sep 2026 — from £40</title></rect><rect x="16.53" y="36.00" width="3.79" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>14 Sep 2026 — from £30</title></rect><rect x="21.79" y="29.58" width="3.79" height="10.42" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Sep 2026 — from £35</title></rect><rect x="27.05" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Sep 2026 — from £30</title></rect><rect x="32.32" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £30</title></rect><rect x="37.58" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Oct 2026 — from £30</title></rect><rect x="42.84" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Oct 2026 — from £30</title></rect><rect x="48.11" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Oct 2026 — from £30</title></rect><rect x="53.37" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £30</title></rect><rect x="58.63" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £30</title></rect><rect x="63.89" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>16 Nov 2026 — from £30</title></rect><rect x="69.16" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Nov 2026 — from £30</title></rect><rect x="74.42" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>30 Nov 2026 — from £30</title></rect><rect x="79.68" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £30</title></rect><rect x="84.95" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Dec 2026 — from £30</title></rect><rect x="90.21" y="23.17" width="3.79" height="16.83" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Dec 2026 — from £40</title></rect><rect x="95.47" y="23.17" width="3.79" height="16.83" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Dec 2026 — from £40</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">One Day - The Musical</div><div class="venue">Garrick Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£30</span><span class="to">to</span>£35</div>
+<div class="best">cheapest: <b>Tue 17 Nov</b> · 24 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="2.80" y="36.00" width="14.40" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>17 Nov 2026 — from £30</title></rect><rect x="22.80" y="36.00" width="14.40" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Nov 2026 — from £30</title></rect><rect x="42.80" y="36.00" width="14.40" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £30</title></rect><rect x="62.80" y="2.00" width="14.40" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £35</title></rect><rect x="82.80" y="36.00" width="14.40" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £30</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Tru</div><div class="venue">Menier Chocolate Factory</div></div>
+<div>
+<div class="ladder"><span class="lo">£30.75</span><span class="to">to</span>£43.25</div>
+<div class="best">cheapest: <b>Sat 19 Sep</b> · 23 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="2.33" y="36.00" width="12.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>19 Sep 2026 — from £30.75</title></rect><rect x="19.00" y="36.00" width="12.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Sep 2026 — from £30.75</title></rect><rect x="35.67" y="2.00" width="12.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £43.25</title></rect><rect x="52.33" y="2.00" width="12.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £43.25</title></rect><rect x="69.00" y="2.00" width="12.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £43.25</title></rect><rect x="85.67" y="2.00" width="12.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £43.25</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">SIX the Musical</div><div class="venue">Vaudeville Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£34.50</span><span class="to">to</span>£74.50</div>
+<div class="best">cheapest: <b>Tue 25 Aug</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.40" y="2.00" width="7.20" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Aug 2026 — from £64.50</title></rect><rect x="11.40" y="36.00" width="7.20" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>25 Aug 2026 — from £34.50</title></rect><rect x="21.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £34.50</title></rect><rect x="31.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £34.50</title></rect><rect x="41.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £34.50</title></rect><rect x="51.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Nov 2026 — from £34.50</title></rect><rect x="61.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £34.50</title></rect><rect x="71.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £34.50</title></rect><rect x="81.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Jan 2027 — from £34.50</title></rect><rect x="91.40" y="36.00" width="7.20" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £34.50</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Cabaret</div><div class="venue">Playhouse Theatre (Kit Kat Club)</div></div>
+<div>
+<div class="ladder"><span class="lo">£35</span><span class="to">to</span>£245</div>
+<div class="best">cheapest: <b>Mon 07 Sep</b> · 192 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.58" y="2.00" width="3.00" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £60</title></rect><rect x="4.75" y="5.40" width="3.00" height="34.60" fill="var(--accent)" opacity="0.32" rx="0.4"><title>31 Aug 2026 — from £57.50</title></rect><rect x="8.92" y="36.00" width="3.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>07 Sep 2026 — from £35</title></rect><rect x="13.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Sep 2026 — from £35</title></rect><rect x="17.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Sep 2026 — from £35</title></rect><rect x="21.42" y="5.40" width="3.00" height="34.60" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Sep 2026 — from £57.50</title></rect><rect x="25.58" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Oct 2026 — from £35</title></rect><rect x="29.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Oct 2026 — from £35</title></rect><rect x="33.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Oct 2026 — from £35</title></rect><rect x="38.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Oct 2026 — from £35</title></rect><rect x="42.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £35</title></rect><rect x="46.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £35</title></rect><rect x="50.58" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>16 Nov 2026 — from £35</title></rect><rect x="54.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Nov 2026 — from £35</title></rect><rect x="58.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>30 Nov 2026 — from £35</title></rect><rect x="63.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £35</title></rect><rect x="67.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Dec 2026 — from £35</title></rect><rect x="71.42" y="22.40" width="3.00" height="17.60" fill="var(--accent)" opacity="0.32" rx="0.4"><title>21 Dec 2026 — from £45</title></rect><rect x="75.58" y="22.40" width="3.00" height="17.60" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Dec 2026 — from £45</title></rect><rect x="79.75" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £35</title></rect><rect x="83.92" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>11 Jan 2027 — from £35</title></rect><rect x="88.08" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>18 Jan 2027 — from £35</title></rect><rect x="92.25" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Jan 2027 — from £35</title></rect><rect x="96.42" y="36.00" width="3.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Feb 2027 — from £35</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Sinatra The Musical</div><div class="venue">Aldwych Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£35</span><span class="to">to</span>£40</div>
+<div class="best">cheapest: <b>Tue 25 Aug</b> · 48 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="1.75" y="36.00" width="9.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>25 Aug 2026 — from £35</title></rect><rect x="14.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £35</title></rect><rect x="26.75" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Oct 2026 — from £35</title></rect><rect x="39.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £35</title></rect><rect x="51.75" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £35</title></rect><rect x="64.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £35</title></rect><rect x="76.75" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Jan 2027 — from £35</title></rect><rect x="89.25" y="36.00" width="9.00" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £35</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Disney&#x27;s The Lion King</div><div class="venue">Lyceum Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£38.95</span><span class="to">to</span>£68.95</div>
+<div class="best">cheapest: <b>Sun 23 Aug</b> · 193 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.56" y="36.00" width="2.88" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>23 Aug 2026 — from £38.95</title></rect><rect x="4.56" y="2.00" width="2.88" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Aug 2026 — from £43.95</title></rect><rect x="8.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Sep 2026 — from £38.95</title></rect><rect x="12.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Sep 2026 — from £38.95</title></rect><rect x="16.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Sep 2026 — from £38.95</title></rect><rect x="20.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Sep 2026 — from £38.95</title></rect><rect x="24.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>29 Sep 2026 — from £38.95</title></rect><rect x="28.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>06 Oct 2026 — from £38.95</title></rect><rect x="32.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>13 Oct 2026 — from £38.95</title></rect><rect x="36.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>20 Oct 2026 — from £38.95</title></rect><rect x="40.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>27 Oct 2026 — from £38.95</title></rect><rect x="44.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>03 Nov 2026 — from £38.95</title></rect><rect x="48.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>10 Nov 2026 — from £38.95</title></rect><rect x="52.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>17 Nov 2026 — from £38.95</title></rect><rect x="56.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Nov 2026 — from £38.95</title></rect><rect x="60.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Dec 2026 — from £38.95</title></rect><rect x="64.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>08 Dec 2026 — from £38.95</title></rect><rect x="68.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>15 Dec 2026 — from £38.95</title></rect><rect x="72.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Dec 2026 — from £38.95</title></rect><rect x="76.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>29 Dec 2026 — from £38.95</title></rect><rect x="80.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>05 Jan 2027 — from £38.95</title></rect><rect x="84.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>12 Jan 2027 — from £38.95</title></rect><rect x="88.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Jan 2027 — from £38.95</title></rect><rect x="92.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Jan 2027 — from £38.95</title></rect><rect x="96.56" y="36.00" width="2.88" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Feb 2027 — from £38.95</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Paddington The Musical</div><div class="venue">Savoy Theatre</div></div>
+<div>
+<div class="ladder"><span class="lo">£40</span><span class="to">to</span>£345</div>
+<div class="best">cheapest: <b>Sat 23 Jan</b> · 130 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="0.74" y="18.19" width="3.79" height="21.81" fill="var(--accent)" opacity="0.32" rx="0.4"><title>24 Aug 2026 — from £150</title></rect><rect x="6.00" y="29.52" width="3.79" height="10.48" fill="var(--accent)" opacity="0.32" rx="0.4"><title>26 Sep 2026 — from £80</title></rect><rect x="11.26" y="2.00" width="3.79" height="38.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>16 Oct 2026 — from £250</title></rect><rect x="16.53" y="14.14" width="3.79" height="25.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>19 Oct 2026 — from £175</title></rect><rect x="21.79" y="21.43" width="3.79" height="18.57" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Oct 2026 — from £130</title></rect><rect x="27.05" y="23.05" width="3.79" height="16.95" fill="var(--accent)" opacity="0.32" rx="0.4"><title>02 Nov 2026 — from £120</title></rect><rect x="32.32" y="21.43" width="3.79" height="18.57" fill="var(--accent)" opacity="0.32" rx="0.4"><title>09 Nov 2026 — from £130</title></rect><rect x="37.58" y="23.05" width="3.79" height="16.95" fill="var(--accent)" opacity="0.32" rx="0.4"><title>16 Nov 2026 — from £120</title></rect><rect x="42.84" y="23.05" width="3.79" height="16.95" fill="var(--accent)" opacity="0.32" rx="0.4"><title>23 Nov 2026 — from £120</title></rect><rect x="48.11" y="27.10" width="3.79" height="12.90" fill="var(--accent)" opacity="0.32" rx="0.4"><title>30 Nov 2026 — from £95</title></rect><rect x="53.37" y="31.95" width="3.79" height="8.05" fill="var(--accent)" opacity="0.32" rx="0.4"><title>07 Dec 2026 — from £65</title></rect><rect x="58.63" y="31.14" width="3.79" height="8.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>14 Dec 2026 — from £70</title></rect><rect x="63.89" y="31.14" width="3.79" height="8.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>22 Dec 2026 — from £70</title></rect><rect x="69.16" y="31.14" width="3.79" height="8.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>28 Dec 2026 — from £70</title></rect><rect x="74.42" y="31.14" width="3.79" height="8.86" fill="var(--accent)" opacity="0.32" rx="0.4"><title>04 Jan 2027 — from £70</title></rect><rect x="79.68" y="34.38" width="3.79" height="5.62" fill="var(--accent)" opacity="0.32" rx="0.4"><title>11 Jan 2027 — from £50</title></rect><rect x="84.95" y="36.00" width="3.79" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>18 Jan 2027 — from £40</title></rect><rect x="90.21" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>25 Jan 2027 — from £40</title></rect><rect x="95.47" y="36.00" width="3.79" height="4.00" fill="var(--accent)" opacity="0.32" rx="0.4"><title>01 Feb 2027 — from £40</title></rect></svg></div>
+</div>
+<div class="show">
+<div><div class="name">Who&#x27;s Afraid of Virginia Woolf?</div><div class="venue">@sohoplace</div></div>
+<div>
+<div class="ladder"><span class="lo">£95</span><span class="to">to</span>£95</div>
+<div class="best">cheapest: <b>Fri 04 Dec</b> · 1 perfs</div>
+</div>
+<div class="strip"><svg viewBox="0 0 100 52" preserveAspectRatio="none" role="img" aria-label="Cheapest ticket by week across the run"><line x1="0" y1="40.0" x2="100" y2="40.0" stroke="var(--rule)" stroke-width="0.6" vector-effect="non-scaling-stroke"/><rect x="14.00" y="36.00" width="72.00" height="4.00" fill="var(--cheap)" opacity="1" rx="0.4"><title>04 Dec 2026 — from £95</title></rect></svg></div>
+</div>
+</div>
+<h2>Cheapest date to see each show</h2>
+<p class="note">The single cheapest performance currently on sale, and what the box office says about how full it is.</p>
+<div class="tablewrap"><table>
+<thead><tr><th>Show</th><th>Cheapest performance</th><th>Availability</th><th style='text-align:right'>From</th><th style='text-align:right'>Dearest seen</th></tr></thead><tbody>
+<tr><td>August: Osage County</td><td>Mon 18 Jan 2027, 18:30</td><td><span class="pill ">High</span></td><td class='num'>£15</td><td class='num'>£15</td></tr>
+<tr><td>Cyrano de Bergerac</td><td>Mon 24 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£15</td><td class='num'>£15</td></tr>
+<tr><td>Into The Woods</td><td>Wed 23 Sep 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£15</td><td class='num'>£25</td></tr>
+<tr><td>MAMMA MIA!</td><td>Mon 02 Nov 2026, 19:30</td><td><span class="pill ">High</span></td><td class='num'>£15</td><td class='num'>£60</td></tr>
+<tr><td>Jeeves Takes Charge</td><td>Wed 26 Aug 2026, 19:30</td><td><span class="pill ">High</span></td><td class='num'>£17.50</td><td class='num'>£25</td></tr>
+<tr><td>The Book of Mormon</td><td>Mon 05 Oct 2026, 19:30</td><td><span class="pill ">High</span></td><td class='num'>£20</td><td class='num'>£55</td></tr>
+<tr><td>The Devil Wears Prada</td><td>Mon 24 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£20</td><td class='num'>£29.50</td></tr>
+<tr><td>Hamilton</td><td>Thu 05 Nov 2026, 14:30</td><td><span class="pill ">High</span></td><td class='num'>£20</td><td class='num'>£500</td></tr>
+<tr><td>To Kill A Mockingbird</td><td>Mon 07 Sep 2026, 19:00</td><td><span class="pill ">High</span></td><td class='num'>£20</td><td class='num'>£125</td></tr>
+<tr><td>Oliver!</td><td>Wed 02 Sep 2026, 19:30</td><td><span class="pill ">High</span></td><td class='num'>£20</td><td class='num'>£35</td></tr>
+<tr><td>The Play That Goes Wrong</td><td>Sun 04 Oct 2026, 19:00</td><td><span class="pill ">Medium</span></td><td class='num'>£20</td><td class='num'>£55</td></tr>
+<tr><td>Abigail&#x27;s Party</td><td>Mon 24 Aug 2026, 19:30</td><td><span class="pill ">Medium availability</span></td><td class='num'>£20.50</td><td class='num'>£20.50</td></tr>
+<tr><td>Arcadia</td><td>Mon 24 Aug 2026, 19:00</td><td><span class="pill ">Medium availability</span></td><td class='num'>£20.50</td><td class='num'>£20.50</td></tr>
+<tr><td>Avenue Q</td><td>Mon 24 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£29.50</td></tr>
+<tr><td>Beetlejuice</td><td>Tue 01 Sep 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£35</td></tr>
+<tr><td>A Christmas Carol Goes Wrong</td><td>Tue 05 Jan 2027, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£60</td></tr>
+<tr><td>Hadestown</td><td>Wed 26 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£35</td></tr>
+<tr><td>Harry Potter and the Cursed Child</td><td>Fri 09 Oct 2026, 19:00</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£30</td></tr>
+<tr><td>Les Misérables</td><td>Thu 01 Oct 2026, 14:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£52.50</td></tr>
+<tr><td>Moulin Rouge! The Musical</td><td>Thu 03 Sep 2026, 14:30</td><td><span class="pill good">Good availability</span></td><td class='num'>£25</td><td class='num'>£71.75</td></tr>
+<tr><td>Mel Brooks&#x27; The Producers</td><td>Mon 24 Aug 2026, 19:00</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£25</td></tr>
+<tr><td>Stranger Things: The First Shadow</td><td>Thu 03 Sep 2026, 19:00</td><td><span class="pill ">Medium availability</span></td><td class='num'>£25</td><td class='num'>£55</td></tr>
+<tr><td>Tao of Glass</td><td>Tue 25 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£25</td><td class='num'>£49.50</td></tr>
+<tr><td>The Truth</td><td>Thu 27 Aug 2026, 20:00</td><td><span class="pill low">Low</span></td><td class='num'>£25</td><td class='num'>£180</td></tr>
+<tr><td>Wicked</td><td>Tue 01 Sep 2026, 19:30</td><td><span class="pill good">Good availability</span></td><td class='num'>£25</td><td class='num'>£157</td></tr>
+<tr><td>Paranormal Activity</td><td>Tue 25 Aug 2026, 19:30</td><td><span class="pill low">Low availability</span></td><td class='num'>£28</td><td class='num'>£58</td></tr>
+<tr><td>Hay Fever</td><td>Tue 29 Sep 2026, 19:30</td><td><span class="pill low">Low</span></td><td class='num'>£30</td><td class='num'>£250</td></tr>
+<tr><td>Oh, Mary!</td><td>Thu 17 Sep 2026, 17:30</td><td><span class="pill good">Good availability</span></td><td class='num'>£30</td><td class='num'>£92.50</td></tr>
+<tr><td>One Day - The Musical</td><td>Tue 17 Nov 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£30</td><td class='num'>£35</td></tr>
+<tr><td>Tru</td><td>Sat 19 Sep 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£30.75</td><td class='num'>£43.25</td></tr>
+<tr><td>SIX the Musical</td><td>Tue 25 Aug 2026, 20:00</td><td><span class="pill low">Low</span></td><td class='num'>£34.50</td><td class='num'>£74.50</td></tr>
+<tr><td>Cabaret</td><td>Mon 07 Sep 2026, 19:30</td><td><span class="pill good">Good availability</span></td><td class='num'>£35</td><td class='num'>£245</td></tr>
+<tr><td>Sinatra The Musical</td><td>Tue 25 Aug 2026, 19:30</td><td><span class="pill ">Medium</span></td><td class='num'>£35</td><td class='num'>£40</td></tr>
+<tr><td>Disney&#x27;s The Lion King</td><td>Sun 23 Aug 2026, 14:30</td><td><span class="pill low">Low availability</span></td><td class='num'>£38.95</td><td class='num'>£68.95</td></tr>
+<tr><td>Paddington The Musical</td><td>Sat 23 Jan 2027, 19:00</td><td><span class="pill ">Medium availability</span></td><td class='num'>£40</td><td class='num'>£345</td></tr>
+<tr><td>Who&#x27;s Afraid of Virginia Woolf?</td><td>Fri 04 Dec 2026, 19:00</td><td><span class="pill low">Low</span></td><td class='num'>£95</td><td class='num'>£95</td></tr>
+</tbody></table></div>
+<footer>
+<p><b>How to read this.</b> Prices are the cheapest seat the box office advertises for that performance — the &ldquo;from&rdquo; price. They are not what every seat costs, and they move.</p>
+<p>Where a performance shows limited availability, that means seats were unavailable when we looked. It does not necessarily mean they sold — houses hold seats back for the production, for comps, and for access bookings.</p>
+<p>Generated 23 August 2026 from 8,362 readings.</p>
+</footer>
+</div>

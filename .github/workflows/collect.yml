@@ -1,0 +1,64 @@
+name: Daily price collection
+
+# Runs on GitHub's own servers, so it doesn't care whether the PC at home is
+# on, logged in, or asleep — the problem that broke the old Windows scheduled
+# task. It runs the same collector, at the same politeness settings, just
+# from a different machine.
+#
+# Cron is UTC. 04:00 UTC is 05:00 in the UK during British Summer Time
+# (late March-late October) and 04:00 UK time once the clocks go back for
+# GMT (late October-late March). If you want it pinned to 05:00 UK time
+# year-round, this needs two cron lines gated by month — ask if you want
+# that; for now it drifts by an hour over winter, which for a daily job
+# is a rounding error, not a problem.
+on:
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch: {}   # lets you trigger a run by hand from the Actions tab
+
+# Don't let two runs overlap if one is still going (this job can take ~an
+# hour) — overlapping runs would hit every theatre site twice in one day.
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # needed to commit the database back to the repo
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Run unit tests
+        # A broken parser must not be allowed to write bad data every night.
+        # Fail the whole run before touching a live site if the logic tests
+        # don't pass.
+        run: python tests/test_core.py
+
+      - name: Collect today's prices
+        run: python -m wet.cli calendars
+
+      - name: Rebuild the visual report
+        run: python -m wet.cli export
+
+      - name: Commit the database and report
+        run: |
+          git config user.name "West End Tracker bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/westend.db data/report.html
+          git diff --cached --quiet && echo "Nothing new to commit." && exit 0
+          git commit -m "Daily collection: $(date -u +%Y-%m-%d)"
+          git push

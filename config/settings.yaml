@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------------------
+# Politeness settings. These are deliberately conservative.
+# The whole West End at one check per performance per day is roughly
+# 300 page loads for calendars — about one every five minutes. That is
+# nothing. Do not be tempted to speed it up; being invisible is the point.
+# ---------------------------------------------------------------------------
+
+# Put a real address here. Identifying yourself honestly makes you LESS
+# likely to be blocked, not more — ops teams block anonymous aggressive
+# bots and generally tolerate polite identified ones.
+contact_email: "robert@promptlybuilt.com"
+project_url: "https://londontheatregeek.com"
+
+# Seconds to wait between page loads on the same host. Randomised
+# between min and max so the pattern isn't a metronome.
+delay_min: 4.0
+delay_max: 9.0
+
+# How many browser pages to run at once. Keep this at 1 or 2.
+concurrency: 1
+
+# Give up on a page after this many seconds.
+timeout_seconds: 45
+
+# Retry a failed page this many times, with exponential backoff.
+max_retries: 3
+
+# Save the raw HTML of every page fetched. Costs disk but means you can
+# re-parse history when you improve a parser, without re-fetching.
+archive_html: true
+archive_dir: "data/raw"
+
+# Run headless. Set false when debugging so you can watch it work.
+headless: true
