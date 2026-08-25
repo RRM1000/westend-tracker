@@ -1,0 +1,9 @@
+# The collected archive is append-only and irreplaceable. Git can't merge a
+# binary SQLite file, and both default resolutions ("keep ours" / "keep
+# theirs") silently discard a day's readings. Merge the rows instead.
+# Requires the driver to be registered once per clone: npm-free, just run
+#   python scripts/setup_git_merge_driver.py
+data/westend.db merge=sqlitedb
+
+# Generated from the database; never worth a manual merge.
+data/report.html merge=ours

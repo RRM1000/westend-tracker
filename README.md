@@ -8,6 +8,35 @@ even if you never sell anything.
 
 ---
 
+## Who owns the database
+
+`data/westend.db` is collected by the **05:00 GitHub Actions run** and committed
+back to this repo. That job is the owner. Locally, treat it as read-only and
+`git pull` to get the latest.
+
+If you do want to collect or experiment locally, point it somewhere else so the
+tracked archive stays clean:
+
+    python -m wet.cli --database data/scratch.db calendars --only wicked-apollo-victoria
+
+### The conflict this avoids
+
+Two machines writing one binary SQLite file used to produce
+`CONFLICT (content): Merge conflict in data/westend.db`, and both obvious
+resolutions are wrong — "keep mine" and "keep theirs" each discard a day of
+readings that can never be re-collected, because yesterday's prices are gone
+from the ticket sites.
+
+A custom merge driver merges the *rows* instead, matching on
+`(show, performance, observed_at)` rather than row id (the two databases
+assign their own ids, so ids don't line up). It's registered per clone —
+`.git/config` isn't version-controlled — so after cloning, run once:
+
+    python scripts/setup_git_merge_driver.py
+
+The CI job runs this itself before committing.
+
+
 ## Why it works this way
 
 The seat data is real and rich — a Wicked performance carries 2,328 seat nodes,

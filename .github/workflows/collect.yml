@@ -58,7 +58,27 @@ jobs:
         run: |
           git config user.name "West End Tracker bot"
           git config user.email "actions@users.noreply.github.com"
+
+          # Row-level merge for the archive. Without this, a database
+          # committed from anywhere else while this job was running turns
+          # into a binary conflict, and every automatic resolution of a
+          # binary conflict silently drops one side's readings.
+          python scripts/setup_git_merge_driver.py
+
           git add data/westend.db data/report.html
           git diff --cached --quiet && echo "Nothing new to commit." && exit 0
           git commit -m "Daily collection: $(date -u +%Y-%m-%d)"
-          git push
+
+          # Someone may have pushed during the ~1h collection. Rebasing would
+          # replay our commit onto theirs and lose the merge, so merge.
+          for attempt in 1 2 3; do
+            if git push; then
+              echo "pushed on attempt $attempt"
+              exit 0
+            fi
+            echo "push rejected; merging remote changes and retrying"
+            git fetch origin
+            git merge origin/${GITHUB_REF_NAME} --no-edit
+          done
+          echo "could not push after 3 attempts" >&2
+          exit 1
