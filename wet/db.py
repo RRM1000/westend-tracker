@@ -13,6 +13,7 @@ So we write a seat row only when its state differs from the last one we saw,
 plus one aggregate row per snapshot that is always written.
 """
 
+import json
 import sqlite3
 from pathlib import Path
 from datetime import datetime, timezone
@@ -47,6 +48,8 @@ CREATE TABLE IF NOT EXISTS price_observation (
     observed_at       TEXT NOT NULL,      -- UTC ISO
     days_to_perf      INTEGER,            -- convenience: booking lead time
     min_price         REAL,               -- the "from £X" figure
+    price_bands_json  TEXT,               -- every band still on sale, e.g. "[34.5,44.5,74.5]"
+                                          -- NULL where the operator does not publish bands
     availability_band TEXT,               -- operator's own words, e.g. "Good availability"
     on_sale           INTEGER NOT NULL DEFAULT 1,
     source_url        TEXT
@@ -94,11 +97,25 @@ def utcnow() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _migrate(conn) -> None:
+    """Add columns that post-date the original schema.
+
+    Deliberately additive: the collected history is the whole asset, so a
+    migration here may only ADD. Never drop or rewrite a column — an old row
+    with no band data is being honest about what we knew that day.
+    """
+    have = {r["name"] for r in conn.execute("PRAGMA table_info(price_observation)")}
+    if "price_bands_json" not in have:
+        conn.execute("ALTER TABLE price_observation ADD COLUMN price_bands_json TEXT")
+        conn.commit()
+
+
 def connect(path="data/westend.db") -> sqlite3.Connection:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
 
 
@@ -131,13 +148,26 @@ def upsert_performance(conn, show_key, external_id, starts_at, url) -> int:
 
 
 def record_price(conn, performance_id, min_price, availability_band, source_url,
-                 days_to_perf=None, on_sale=True):
+                 days_to_perf=None, on_sale=True, price_bands=None):
+    """price_bands: every price still on sale for this performance, or None
+    where the operator does not publish them. Stored as a JSON list so the
+    website can build Premium/Mid-range/Budget bands without re-fetching.
+
+    Note what this is NOT: it is the bands with seats remaining, not the
+    house's full price list. On a nearly-sold-out performance the cheap
+    bands vanish, so anything published from this must be qualified by
+    availability_band or it will quote a sold-out show's premium-only
+    prices as if they were normal.
+    """
+    bands_json = None
+    if price_bands:
+        bands_json = json.dumps(sorted(float(b) for b in price_bands))
     conn.execute(
         """INSERT INTO price_observation
            (performance_id, observed_at, days_to_perf, min_price,
-            availability_band, on_sale, source_url)
-           VALUES (?,?,?,?,?,?,?)""",
-        (performance_id, utcnow(), days_to_perf, min_price,
+            price_bands_json, availability_band, on_sale, source_url)
+           VALUES (?,?,?,?,?,?,?,?)""",
+        (performance_id, utcnow(), days_to_perf, min_price, bands_json,
          availability_band, 1 if on_sale else 0, source_url),
     )
 

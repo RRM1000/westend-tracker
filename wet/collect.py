@@ -73,7 +73,8 @@ async def collect_calendars(conn, session: Session, shows, months=6, verbose=Tru
                     pid = db.upsert_performance(conn, show["key"], p.external_id,
                                                 p.starts_at, p.url)
                     db.record_price(conn, pid, p.min_price, p.availability_band,
-                                    url, days_to_perf=_days_to(p.starts_at))
+                                    url, days_to_perf=_days_to(p.starts_at),
+                                    price_bands=p.price_bands)
                 conn.commit()
                 ok += 1
                 if verbose:

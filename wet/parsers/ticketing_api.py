@@ -49,6 +49,20 @@ PRICE_SAMPLE = 8
 PRICE_GAP = 2.5
 
 
+def available_bands(inv: dict | None) -> list[float] | None:
+    """Every distinct price still on sale for this performance.
+
+    priceMaps lists only bands with seats remaining, so this shrinks from the
+    bottom as a house fills — which is the signal, not a defect. Callers
+    publishing these must check availability first; see record_price.
+    """
+    if not inv:
+        return None
+    prices = {p.get("price") for p in (inv.get("priceMaps") or [])
+              if isinstance(p.get("price"), (int, float))}
+    return sorted(float(p) for p in prices) or None
+
+
 def cheapest_from_inventory(inv: dict | None) -> float | None:
     """Cheapest price a customer could actually choose for this performance.
 
@@ -137,6 +151,7 @@ class TicketingApiParser:
             inv = await _fetch_json(
                 page, f"{cls.BASE}/api/consumer/eventinventory/{perf.external_id}?")
             perf.min_price = cheapest_from_inventory(inv)
+            perf.price_bands = available_bands(inv)
 
         return out
 

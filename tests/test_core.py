@@ -4,7 +4,9 @@ The DOM parsing needs a real page, so it's covered by `wet.cli probe` rather
 than unit tests. Everything below is pure logic and runs anywhere.
 """
 
+import json
 import os
+import sqlite3
 import sys
 import tempfile
 
@@ -12,7 +14,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from wet import db
 from wet.parsers.atg import seat_ref_for
-from wet.parsers.spektrix import cheapest_public_price
+from wet.parsers.ticketing_api import available_bands
+from wet.parsers.spektrix import cheapest_public_price, public_prices
 from wet.parsers.base import all_money, first_money, norm_ref, parse_uk_datetime
 
 
@@ -111,6 +114,83 @@ def test_spektrix_price_ignores_worded_concessions():
             [{"amount": a, "ticketType": {"name": "Ticket for Access Booker"}}
              for a in (32.25, 24.5, 17.5, 11.25)])
     assert cheapest_public_price({"prices": rows}) == 0.10
+
+
+def test_price_bands_are_stored_and_read_back():
+    """The website needs Premium/Mid/Budget bands, not just the cheapest
+    ticket, so every band on sale is kept alongside the minimum."""
+    with tempfile.TemporaryDirectory() as tmp:
+        conn = db.connect(os.path.join(tmp, "t.db"))
+        pid = _seed(conn)
+        db.record_price(conn, pid, 34.5, "Good availability", "u",
+                        price_bands=[74.5, 34.5, 54.5, 44.5])
+        row = conn.execute(
+            "SELECT min_price, price_bands_json FROM price_observation "
+            "WHERE performance_id=?", (pid,)).fetchone()
+        assert row["min_price"] == 34.5
+        assert json.loads(row["price_bands_json"]) == [34.5, 44.5, 54.5, 74.5]
+
+        # an operator that publishes no bands must store NULL, not an empty
+        # list — "we don't know" and "there are none" are different facts
+        db.record_price(conn, pid, 25.0, "Good availability", "u")
+        rows = conn.execute(
+            "SELECT price_bands_json FROM price_observation "
+            "WHERE performance_id=? ORDER BY id", (pid,)).fetchall()
+        assert rows[1]["price_bands_json"] is None
+        conn.close()
+
+
+def test_migration_adds_bands_column_to_an_old_database():
+    """The existing archive predates this column. Opening it must add the
+    column without touching a single collected row."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "old.db")
+        old = sqlite3.connect(path)
+        old.executescript("""
+            CREATE TABLE price_observation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                performance_id INTEGER NOT NULL,
+                observed_at TEXT NOT NULL,
+                days_to_perf INTEGER,
+                min_price REAL,
+                availability_band TEXT,
+                on_sale INTEGER NOT NULL DEFAULT 1,
+                source_url TEXT);
+            INSERT INTO price_observation
+                (performance_id, observed_at, min_price, availability_band, on_sale)
+            VALUES (1, '2026-08-23T06:00:00+00:00', 29.5, 'Good availability', 1);""")
+        old.commit(); old.close()
+
+        conn = db.connect(path)
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(price_observation)")}
+        assert "price_bands_json" in cols
+        row = conn.execute("SELECT min_price, price_bands_json FROM price_observation").fetchone()
+        assert row["min_price"] == 29.5           # untouched
+        assert row["price_bands_json"] is None    # honest about what we knew then
+        conn.close()
+
+
+def test_tixtrack_bands_come_from_available_price_maps():
+    """Real SIX payload shape. priceMaps lists only bands with seats left,
+    so this is 'still on sale', not the house's full price list."""
+    inv = {"priceMaps": [{"price": 74.5}, {"price": 34.5}, {"price": 54.5},
+                         {"price": 34.5}, {"price": None}]}
+    assert available_bands(inv) == [34.5, 54.5, 74.5]
+    assert available_bands({"priceMaps": []}) is None
+    assert available_bands(None) is None
+
+
+def test_spektrix_bands_drop_restricted_types_only():
+    """Bands for the website must exclude access/concession rates but keep
+    genuinely cheap public tickets."""
+    payload = {"prices": [
+        {"amount": 70.0, "ticketType": {"name": "Full Price"}},
+        {"amount": 30.0, "ticketType": {"name": "Full Price"}},
+        {"amount": 15.0, "ticketType": {"name": "Standing"}},
+        {"amount": 20.0, "ticketType": {"name": "Access"}},
+        {"amount": 17.5, "ticketType": {"name": "Over 65s"}},
+    ]}
+    assert public_prices(payload) == [15.0, 30.0, 70.0]
 
 
 def _seed(conn):

@@ -25,6 +25,9 @@ class Performance:
     url: str
     min_price: float | None = None
     availability_band: str | None = None
+    # Every price still on sale for this performance, cheapest first. None
+    # where the operator doesn't publish a band list (ATG's calendar, LW).
+    price_bands: list[float] | None = None
 
 
 @dataclass

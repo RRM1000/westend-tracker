@@ -71,15 +71,17 @@ RESTRICTED = re.compile(
 PRICE_SAMPLE = 8
 PRICE_GAP = 2.0
 
-def cheapest_public_price(payload: dict | None) -> float | None:
-    """Cheapest price an ordinary member of the public could pay.
+def public_prices(payload: dict | None) -> list[float]:
+    """Every price an ordinary member of the public could pay, cheapest first.
 
-    Returns None when nothing on the list qualifies — which is different from
-    "this show is free", so never coerce it to zero.
+    Restricted types (access, concessions, unions) and non-tickets
+    (merchandise, programmes) are dropped by NAME. Never filter by how small
+    the number is: Royal Court genuinely sells 10p tickets alongside £64.50
+    ones for the same performance.
     """
     if not payload:
-        return None
-    amounts = []
+        return []
+    amounts = set()
     for row in payload.get("prices") or []:
         amt = row.get("amount")
         name = ((row.get("ticketType") or {}).get("name") or "")
@@ -87,8 +89,18 @@ def cheapest_public_price(payload: dict | None) -> float | None:
             continue
         if RESTRICTED.search(name):
             continue
-        amounts.append(float(amt))
-    return min(amounts) if amounts else None
+        amounts.add(float(amt))
+    return sorted(amounts)
+
+
+def cheapest_public_price(payload: dict | None) -> float | None:
+    """Cheapest price an ordinary member of the public could pay.
+
+    Returns None when nothing on the list qualifies — which is different from
+    "this show is free", so never coerce it to zero.
+    """
+    prices = public_prices(payload)
+    return prices[0] if prices else None
 
 
 class SpektrixParser:
@@ -150,9 +162,13 @@ class SpektrixParser:
                        }""",
                     f"https://system.spektrix.com/{client}/api/v3"
                     f"/instances/{perf.external_id}/price-list")
-                perf.min_price = cheapest_public_price(json.loads(txt) if txt else None)
+                payload = json.loads(txt) if txt else None
+                bands = public_prices(payload)
+                perf.min_price = bands[0] if bands else None
+                perf.price_bands = bands or None
             except Exception:  # noqa: BLE001
                 perf.min_price = None
+                perf.price_bands = None
 
         return out
 
