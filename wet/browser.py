@@ -2,7 +2,8 @@
 
 The rules here are the ones that keep you both legal and unblocked:
   * public, unauthenticated pages only — never log in, never accept terms
-  * one page at a time, with jittered delays
+  * one page at a time per site, with jittered delays between pages on the
+    same site (different sites are collected side by side)
   * an honest user-agent naming the project and a contact address
   * every page archived to disk so you never fetch the same thing twice
 """
@@ -12,6 +13,7 @@ import random
 import time
 import hashlib
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -24,6 +26,7 @@ class Settings:
         self.delay_min = float(raw.get("delay_min", 4))
         self.delay_max = float(raw.get("delay_max", 9))
         self.concurrency = int(raw.get("concurrency", 1))
+        self.sites_at_once = int(raw.get("sites_at_once", 6))
         self.timeout = int(raw.get("timeout_seconds", 45)) * 1000
         self.max_retries = int(raw.get("max_retries", 3))
         self.archive_html = bool(raw.get("archive_html", True))
@@ -47,8 +50,10 @@ class Session:
         self._pw = None
         self._browser = None
         self._ctx = None
-        self._last_hit = 0.0
-        self._lock = asyncio.Lock()
+        # The polite delay is per host: each ticketing site sees one page
+        # every delay_min-delay_max seconds, however many sites run at once.
+        self._last_hit: dict[str, float] = {}
+        self._locks: dict[str, asyncio.Lock] = {}
 
     async def __aenter__(self):
         # Imported here rather than at module load so the reporting commands
@@ -82,13 +87,15 @@ class Session:
         if self._pw:
             await self._pw.stop()
 
-    async def _throttle(self):
-        async with self._lock:
+    async def _throttle(self, url: str):
+        host = urlsplit(url).hostname or ""
+        lock = self._locks.setdefault(host, asyncio.Lock())
+        async with lock:
             wait = random.uniform(self.s.delay_min, self.s.delay_max)
-            elapsed = time.monotonic() - self._last_hit
+            elapsed = time.monotonic() - self._last_hit.get(host, 0.0)
             if elapsed < wait:
                 await asyncio.sleep(wait - elapsed)
-            self._last_hit = time.monotonic()
+            self._last_hit[host] = time.monotonic()
 
     def _archive(self, url: str, html: str):
         if not self.s.archive_html:
@@ -109,7 +116,7 @@ class Session:
         """
         last_err = None
         for attempt in range(1, self.s.max_retries + 1):
-            await self._throttle()
+            await self._throttle(url)
             page = await self._ctx.new_page()
             try:
                 await page.goto(url, wait_until="domcontentloaded")

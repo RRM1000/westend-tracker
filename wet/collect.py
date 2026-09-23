@@ -1,8 +1,10 @@
 """The two collection passes."""
 
+import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -22,67 +24,92 @@ def _days_to(starts_at: str) -> int | None:
         return None
 
 
-async def collect_calendars(conn, session: Session, shows, months=6, verbose=True):
+async def collect_calendars(conn, session: Session, shows, months=6, verbose=True,
+                            sites_at_once=6):
     """Phase 1. Cheap, fast, and the thing to run every day from now on.
 
-    One page load per show per month. For the whole West End that is roughly
-    300 loads a day — about one every five minutes.
+    One page load per show per month, roughly 350 loads a day. Shows are
+    grouped by the ticketing site they are read from: within a site, pages
+    load one at a time with the polite delay between them (Session throttles
+    per host); different sites run side by side, sites_at_once at a time. So
+    each site sees exactly the traffic it did when everything ran in one
+    queue, and the night takes as long as the busiest site, not all of them.
     """
-    ok = failed = 0
+    stats = {"ok": 0, "failed": 0}
+
+    groups: dict[str, list[dict]] = {}
     for show in shows:
         P = parsers.get(show["operator"])
-        db.upsert_show(conn, show["key"], show["operator"], show["title"],
-                       show.get("venue"), json.dumps(show))
-        # Commit now: a show with nothing on sale yet still belongs in the
-        # registry, and otherwise it is rolled back with the empty months.
-        conn.commit()
-        for url in P.calendar_urls(show, months):
+        urls = list(P.calendar_urls(show, months))
+        host = urlsplit(urls[0]).hostname if urls else show["operator"]
+        groups.setdefault(host or show["operator"], []).append(show)
+
+    gate = asyncio.Semaphore(max(1, sites_at_once))
+
+    async def run_site(site_shows):
+        async with gate:
+            for show in site_shows:
+                await _collect_show_calendar(conn, session, show, months, verbose, stats)
+
+    await asyncio.gather(*(run_site(g) for g in groups.values()))
+    return stats
+
+
+async def _collect_show_calendar(conn, session, show, months, verbose, stats):
+    P = parsers.get(show["operator"])
+    db.upsert_show(conn, show["key"], show["operator"], show["title"],
+                   show.get("venue"), json.dumps(show))
+    # Commit now: a show with nothing on sale yet still belongs in the
+    # registry, and otherwise it is rolled back with the empty months.
+    conn.commit()
+    for url in P.calendar_urls(show, months):
+        try:
+            page, _ = await session.load(
+                url, wait_for=getattr(P, 'calendar_wait_selector', lambda: None)())
+        except Exception as e:  # noqa: BLE001
+            stats["failed"] += 1
+            if verbose:
+                print(f"  ! {url}\n    {e}")
+            continue
+        try:
             try:
-                page, _ = await session.load(
-                    url, wait_for=getattr(P, 'calendar_wait_selector', lambda: None)())
+                perfs = await P.parse_calendar(page, show)
             except Exception as e:  # noqa: BLE001
-                failed += 1
+                # A broken parser must not take the whole night's
+                # collection down with it: the other operators are
+                # still fine, and their history is unrecoverable.
+                stats["failed"] += 1
                 if verbose:
-                    print(f"  ! {url}\n    {e}")
+                    print(f"  ! parser error on {show['key']}: "
+                          f"{type(e).__name__}: {e}")
                 continue
-            try:
-                try:
-                    perfs = await P.parse_calendar(page, show)
-                except Exception as e:  # noqa: BLE001
-                    # A broken parser must not take the whole night's
-                    # collection down with it — the other operators are
-                    # still fine, and their history is unrecoverable.
-                    failed += 1
-                    if verbose:
-                        print(f"  ! parser error on {show['key']}: "
-                              f"{type(e).__name__}: {e}")
-                    continue
-                if perfs is None:
-                    # Could not read the page — this is the silent-empty trap.
-                    failed += 1
-                    if verbose:
-                        print(f"  ! could not read: {url}")
-                    continue
-                if not perfs:
-                    # Read fine, nothing on that month. Normal, not a fault.
-                    ok += 1
-                    if verbose:
-                        print(f"  . {show['key']:<28} nothing on this month")
-                    continue
-                for p in perfs:
-                    pid = db.upsert_performance(conn, show["key"], p.external_id,
-                                                p.starts_at, p.url)
-                    db.record_price(conn, pid, p.min_price, p.availability_band,
-                                    url, days_to_perf=_days_to(p.starts_at),
-                                    price_bands=p.price_bands)
-                conn.commit()
-                ok += 1
+            if perfs is None:
+                # Could not read the page: this is the silent-empty trap.
+                stats["failed"] += 1
                 if verbose:
-                    print(f"  + {show['key']:<28} {url.rsplit('/',1)[-1]:<14} "
-                          f"{len(perfs):>3} performances")
-            finally:
-                await page.close()
-    return {"ok": ok, "failed": failed}
+                    print(f"  ! could not read: {url}")
+                continue
+            if not perfs:
+                # Read fine, nothing on that month. Normal, not a fault.
+                stats["ok"] += 1
+                if verbose:
+                    print(f"  . {show['key']:<28} nothing on this month")
+                continue
+            # No await between here and the commit, so another site's
+            # coroutine can never commit half of this page's rows.
+            for p in perfs:
+                pid = db.upsert_performance(conn, show["key"], p.external_id,
+                                            p.starts_at, p.url)
+                db.record_price(conn, pid, p.min_price, p.availability_band,
+                                url, days_to_perf=_days_to(p.starts_at),
+                                price_bands=p.price_bands)
+            conn.commit()
+            stats["ok"] += 1
+            if verbose:
+                print(f"  + {show['key']:<28} {url.rsplit('/',1)[-1]:<14} "
+                      f"{len(perfs):>3} performances")
+        finally:
+            await page.close()
 
 
 async def collect_seats(conn, session: Session, shows, limit_per_show=None, verbose=True):

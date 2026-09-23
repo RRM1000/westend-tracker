@@ -23,7 +23,8 @@ async def _run_calendars(args):
         shows = [s for s in shows if s["key"] in args.only]
     print(f"Collecting calendars for {len(shows)} show(s), {args.months} months ahead\n")
     async with Session(settings) as session:
-        stats = await collect_calendars(conn, session, shows, months=args.months)
+        stats = await collect_calendars(conn, session, shows, months=args.months,
+                                        sites_at_once=settings.sites_at_once)
     print(f"\nDone. {stats['ok']} pages ok, {stats['failed']} failed.")
 
 

@@ -16,7 +16,12 @@ project_url: "https://londontheatregeek.com"
 delay_min: 4.0
 delay_max: 9.0
 
-# How many browser pages to run at once. Keep this at 1 or 2.
+# How many different ticketing sites to collect from at the same time. Each
+# site still gets one page at a time with the delay above, so this changes how
+# long the night takes, not how hard any one site is hit.
+sites_at_once: 6
+
+# Unused since the per-site delay; kept so old configs still load.
 concurrency: 1
 
 # Give up on a page after this many seconds.
