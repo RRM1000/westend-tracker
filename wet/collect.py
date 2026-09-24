@@ -9,12 +9,20 @@ from urllib.parse import urlsplit
 import yaml
 
 from . import db, parsers
-from .browser import Session, Settings
+from .browser import Session, Settings, Unavailable
+
+
+# Two months in a row that fail even after retries means the show is broken,
+# not the network. Each failure costs about three minutes of timeouts.
+GIVE_UP_AFTER = 2
 
 
 def load_shows(path="config/shows.yaml") -> list[dict]:
+    """Shows still to collect. An entry with `closed:` stays in the file as a
+    record of its key, but is no longer fetched; its history stays in the
+    database."""
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
-    return raw.get("shows", [])
+    return [s for s in raw.get("shows", []) if not s.get("closed")]
 
 
 def _days_to(starts_at: str) -> int | None:
@@ -62,15 +70,30 @@ async def _collect_show_calendar(conn, session, show, months, verbose, stats):
     # Commit now: a show with nothing on sale yet still belongs in the
     # registry, and otherwise it is rolled back with the empty months.
     conn.commit()
+    in_a_row = 0
     for url in P.calendar_urls(show, months):
         try:
             page, _ = await session.load(
-                url, wait_for=getattr(P, 'calendar_wait_selector', lambda: None)())
-        except Exception as e:  # noqa: BLE001
+                url, wait_for=getattr(P, 'calendar_wait_selector', lambda: None)(),
+                unavailable=getattr(P, 'calendar_unavailable', None))
+        except Unavailable as e:
+            # Every other month would get the same answer.
             stats["failed"] += 1
             if verbose:
+                print(f"  ! {show['key']:<28} skipped: {e}")
+            return
+        except Exception as e:  # noqa: BLE001
+            stats["failed"] += 1
+            in_a_row += 1
+            if verbose:
                 print(f"  ! {url}\n    {e}")
+            if in_a_row >= GIVE_UP_AFTER:
+                if verbose:
+                    print(f"  ! {show['key']:<28} skipped the remaining months "
+                          f"after {in_a_row} failures in a row")
+                return
             continue
+        in_a_row = 0
         try:
             try:
                 perfs = await P.parse_calendar(page, show)

@@ -18,6 +18,12 @@ from urllib.parse import urlsplit
 import yaml
 
 
+class Unavailable(Exception):
+    """The site answered, but not with the page we asked for — a closed
+    show's calendar redirecting to its landing page, or a Queue-it waiting
+    room. Retrying the same URL will get the same answer, so don't."""
+
+
 class Settings:
     def __init__(self, path="config/settings.yaml"):
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
@@ -106,13 +112,17 @@ class Session:
         out.mkdir(parents=True, exist_ok=True)
         (out / f"{key}.html").write_text(html, encoding="utf-8")
 
-    async def load(self, url: str, wait_for: str | None = None, settle_ms: int = 1200):
+    async def load(self, url: str, wait_for: str | None = None, settle_ms: int = 1200,
+                   unavailable=None):
         """Load a page and return (page, html). Caller must close the page.
 
         wait_for: a CSS selector that must appear before we consider the page
                   ready. For seat maps this is what stops you capturing an
                   empty shell — which is exactly the trap this whole project
                   nearly fell into.
+        unavailable: optional callable(final_url) -> reason or None. When it
+                  returns a reason the load raises Unavailable at once instead
+                  of burning three timeouts on a page that will never come.
         """
         last_err = None
         for attempt in range(1, self.s.max_retries + 1):
@@ -120,16 +130,32 @@ class Session:
             page = await self._ctx.new_page()
             try:
                 await page.goto(url, wait_until="domcontentloaded")
+                self._check(page, unavailable)
                 if wait_for:
-                    await page.wait_for_selector(wait_for, state="attached")
+                    try:
+                        await page.wait_for_selector(wait_for, state="attached")
+                    except Exception:
+                        # A client-side redirect lands after domcontentloaded,
+                        # so look again before calling this a retryable fault.
+                        self._check(page, unavailable)
+                        raise
                 if settle_ms:
                     await page.wait_for_timeout(settle_ms)
                 html = await page.content()
                 self._archive(url, html)
                 return page, html
+            except Unavailable:
+                await page.close()
+                raise
             except Exception as e:  # noqa: BLE001
                 last_err = e
                 await page.close()
                 backoff = min(60, 5 * (2 ** (attempt - 1)))
                 await asyncio.sleep(backoff)
         raise RuntimeError(f"failed after {self.s.max_retries} attempts: {url}: {last_err}")
+
+    @staticmethod
+    def _check(page, unavailable):
+        reason = unavailable(page.url) if unavailable else None
+        if reason:
+            raise Unavailable(f"{reason} ({page.url})")

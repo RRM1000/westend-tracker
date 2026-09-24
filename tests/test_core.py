@@ -13,7 +13,8 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from wet import db
-from wet.parsers.atg import seat_ref_for
+from wet.collect import load_shows
+from wet.parsers.atg import ATGParser, seat_ref_for
 from wet.parsers.ticketing_api import available_bands
 from wet.parsers.spektrix import cheapest_public_price, public_prices
 from wet.parsers.base import all_money, first_money, norm_ref, parse_uk_datetime
@@ -252,6 +253,28 @@ def test_price_observations_are_append_only():
             (pid,)).fetchall()
         assert [r["min_price"] for r in rows] == [59.50, 45.00]
         conn.close()
+
+
+def test_atg_calendar_unavailable():
+    # Final URLs seen on 23 Sep 2026.
+    check = ATGParser.calendar_unavailable
+    assert check("https://www.atgtickets.com/shows/wicked/apollo-victoria-theatre"
+                 "/calendar/2027-05-30") is None
+    assert "closed" in check("https://www.atgtickets.com/shows/abigails-party"
+                             "/harold-pinter-theatre/")
+    assert "closed" in check("https://www.atgtickets.com/venues/tom-stoppard-theatre"
+                             "/whats-on/")
+    assert "Queue-it" in check("https://queue.atgtickets.com/?c=atgtickets&e=paddingtonsav")
+
+
+def test_closed_shows_are_not_collected():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "shows.yaml")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("shows:\n"
+                    "  - key: running\n    operator: atg\n"
+                    "  - key: gone\n    closed: 2026-09-12\n    operator: atg\n")
+        assert [s["key"] for s in load_shows(path)] == ["running"]
 
 
 if __name__ == "__main__":

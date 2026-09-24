@@ -20,6 +20,7 @@ ATG computes and we would otherwise have to derive.
 """
 
 import re
+from urllib.parse import urlsplit
 
 from .base import Performance, Seat, all_money, first_money, month_starts, norm_ref, parse_uk_datetime
 
@@ -64,6 +65,25 @@ class ATGParser:
         # The calendar is rendered client-side too. Without this we get the
         # shell, parse zero performances, and record nothing — silently.
         return 'a[href*="/tickets/"]'
+
+    @staticmethod
+    def calendar_unavailable(final_url: str) -> str | None:
+        """Why this calendar can't be read, or None if it can.
+
+        Seen 23 Sep 2026: a closed show's calendar redirects to its landing
+        page (Abigail's Party) or the venue's what's-on page (Arcadia, after
+        the Duke of York's became the Tom Stoppard Theatre), and a busy show
+        can be held in a Queue-it waiting room (Paddington). None of these
+        ever render ticket links, so waiting and retrying only burns time.
+        A month past the booking window is different: it redirects to
+        another /calendar/ month, which parses fine.
+        """
+        parts = urlsplit(final_url)
+        if (parts.hostname or "").startswith("queue."):
+            return "held in a Queue-it waiting room"
+        if "/calendar/" not in parts.path:
+            return "calendar redirected away (closed or moved?)"
+        return None
 
     @staticmethod
     async def parse_calendar(page, show: dict) -> list[Performance]:

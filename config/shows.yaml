@@ -60,14 +60,19 @@ shows:
     atg_show_slug: "paranormal-activity"
     atg_venue_slug: "ambassadors-theatre"
 
+  # Closed 19 Sep 2026; the calendar now redirects to the show page.
   - key: abigails-party-harold-pinter
+    closed: 2026-09-19
     operator: atg
     title: "Abigail's Party"
     venue: "Harold Pinter Theatre"
     atg_show_slug: "abigails-party"
     atg_venue_slug: "harold-pinter-theatre"
 
+  # Closed 12 Sep 2026, as the Duke of York's was renamed the Tom Stoppard
+  # Theatre; the old calendar URL now redirects to the venue's what's-on page.
   - key: arcadia-duke-of-yorks
+    closed: 2026-09-12
     operator: atg
     title: "Arcadia"
     venue: "Duke of York's Theatre"
