@@ -28,7 +28,12 @@ permissions:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    # Was 150, when a night's collection took up to 107 minutes; this job was
+    # nine tenths of the account's Actions minutes in September 2026. With the
+    # per-site pace and closed shows skipped it should take well under 30.
+    # Kept at 60 until a few nights confirm that: the database is only
+    # committed at the end, so a run cut off by the timeout loses the night.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
