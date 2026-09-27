@@ -53,7 +53,7 @@ import json
 import re
 from datetime import date, timedelta
 
-from .base import Performance, Seat
+from .base import Performance, Seat, pick_for_pricing
 
 # Ticket types not on general sale, or not tickets at all. Kept deliberately
 # broad: every venue words its concessions differently, and a concession that
@@ -66,8 +66,9 @@ RESTRICTED = re.compile(
     re.I,
 )
 
-# How many upcoming performances per show to price each run, and the pause
-# between those extra calls.
+# How many performances per show to price each run (the next few, then a
+# spread over the rest: see pick_for_pricing), and the pause between those
+# extra calls.
 PRICE_SAMPLE = 8
 PRICE_GAP = 2.0
 
@@ -145,13 +146,13 @@ class SpektrixParser:
                 starts_at=starts,
                 url=f"https://system.spektrix.com/{show['spektrix_client']}"
                     f"/api/v3/instances/{iid}",
-                min_price=None,          # filled in below for the nearest few
+                min_price=None,          # filled in below for a sample
                 availability_band="On sale" if i.get("isOnSale") else "Not on sale",
             ))
         out.sort(key=lambda p: p.starts_at)
 
         client = show["spektrix_client"]
-        for n, perf in enumerate(out[:PRICE_SAMPLE]):
+        for n, perf in enumerate(pick_for_pricing(out, PRICE_SAMPLE)):
             if n:
                 await asyncio.sleep(PRICE_GAP)
             try:

@@ -57,6 +57,21 @@ def month_starts(n: int, start: date | None = None) -> list[date]:
     return out
 
 
+def pick_for_pricing(perfs: list, n: int, near: int = 4) -> list:
+    """Which performances to price, from a date-ordered list: the next
+    `near`, where prices move most, then the rest of `n` spread evenly over
+    what's left.
+
+    Pricing only the first n meant a show opening in February had its eight
+    previews priced and nothing after press night, so nobody could tell
+    whether previews were cheaper. Same number of calls, wider view."""
+    if len(perfs) <= n:
+        return perfs
+    head, rest, k = perfs[:near], perfs[near:], n - near
+    step = len(rest) / k
+    return head + [rest[int(i * step + step / 2)] for i in range(k)]
+
+
 def norm_ref(*parts) -> str:
     clean = [re.sub(r"\s+", " ", str(p or "").strip().upper()) for p in parts]
     return "|".join(p for p in clean if p)

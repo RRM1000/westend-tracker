@@ -37,11 +37,13 @@ TWO THINGS THAT WILL MISLEAD YOU
 import asyncio
 import json
 
-from .base import Performance, Seat, month_starts, norm_ref
+from .base import Performance, Seat, month_starts, norm_ref, pick_for_pricing
 
-# How many upcoming performances per show to price properly each month. Each
-# one is an extra API call, so this is the dial between cost and coverage.
-# The near dates are where prices actually move.
+# How many performances per show to price properly each month. Each one is
+# an extra API call, so this is the dial between cost and coverage. The next
+# few are priced (where prices move) and the rest spread over the month
+# (see pick_for_pricing), so a month holding a press night is priced both
+# sides of it.
 PRICE_SAMPLE = 8
 
 # Seconds between those extra calls. Small JSON requests of the sort the site's
@@ -145,7 +147,7 @@ class TicketingApiParser:
 
         out.sort(key=lambda p: p.starts_at)
 
-        for i, perf in enumerate(out[:PRICE_SAMPLE]):
+        for i, perf in enumerate(pick_for_pricing(out, PRICE_SAMPLE)):
             if i:
                 await asyncio.sleep(PRICE_GAP)
             inv = await _fetch_json(
