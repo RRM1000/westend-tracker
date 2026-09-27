@@ -135,6 +135,57 @@ async def _collect_show_calendar(conn, session, show, months, verbose, stats):
             await page.close()
 
 
+async def collect_standing(conn, session: Session, shows, days=8, verbose=True):
+    """Standing places only, for shows marked track_standing in shows.yaml.
+
+    Some houses sell a row of standing places only once a performance is
+    close to selling out (the Lion King's 29, at the back of a circle), and
+    the seat map labels them "Sold out" both before release and after.
+    Reading them every night for the next `days` days records the evening
+    they turn available, which is what London Theatre Geek needs to tell
+    readers when to look. Only the standing places are stored, as seat_state
+    deltas, so this costs a few rows a night rather than a whole house.
+    """
+    ok = failed = 0
+    for show in [s for s in shows if s.get("track_standing")]:
+        P = parsers.get(show["operator"])
+        rows = conn.execute(
+            """SELECT id, url, starts_at FROM performance
+               WHERE show_key=? AND starts_at >= datetime('now')
+                 AND starts_at < datetime('now', ?)
+               ORDER BY starts_at""",
+            (show["key"], f"+{days} days"),
+        ).fetchall()
+        for row in rows:
+            url = row["url"]
+            if not url or ("/performance/" not in url and "/tickets/" not in url):
+                continue
+            try:
+                page, _ = await session.load(url, wait_for=P.seat_wait_selector())
+            except Exception as e:  # noqa: BLE001
+                failed += 1
+                if verbose:
+                    print(f"  ! {url}\n    {e}")
+                continue
+            try:
+                seats = [s for s in await P.parse_seats(page) if "standing" in (s.raw_label or "").lower()]
+                if not seats:
+                    if verbose:
+                        print(f"  - {show['key']:<28} {row['starts_at']}  no standing places on the map")
+                    continue
+                changed = db.record_seat_states(conn, row["id"], seats)
+                conn.commit()
+                ok += 1
+                if verbose:
+                    open_now = sum(1 for s in seats if s.available)
+                    price = next((s.price for s in seats if s.available and s.price), None)
+                    print(f"  + {show['key']:<28} {row['starts_at']}  standing {open_now:>2}/{len(seats)} available"
+                          f"{f' at £{price:g}' if price else ''}  ({changed} changed)")
+            finally:
+                await page.close()
+    return {"ok": ok, "failed": failed}
+
+
 async def collect_seats(conn, session: Session, shows, limit_per_show=None, verbose=True):
     """Phase 2. Heavier — a seat map is 600KB–1MB and needs the page to render.
 

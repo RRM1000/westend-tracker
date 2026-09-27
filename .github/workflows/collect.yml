@@ -56,6 +56,12 @@ jobs:
       - name: Collect today's prices
         run: python -m wet.cli calendars
 
+      # Standing places on shows marked track_standing (the Lion King): the
+      # next eight days' seat maps, standing row only. A few minutes; never
+      # allowed to fail the night's collection.
+      - name: Record standing places
+        run: python -m wet.cli standing --days 8 || true
+
       - name: Rebuild the visual report
         run: python -m wet.cli export
 

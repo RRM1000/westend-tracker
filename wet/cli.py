@@ -12,7 +12,7 @@ import sys
 
 from . import db
 from .browser import Session, Settings
-from .collect import collect_calendars, collect_seats, load_shows
+from .collect import collect_calendars, collect_seats, collect_standing, load_shows
 
 
 async def _run_calendars(args):
@@ -37,6 +37,16 @@ async def _run_seats(args):
     print(f"Collecting seat maps for {len(shows)} show(s)\n")
     async with Session(settings) as session:
         stats = await collect_seats(conn, session, shows, limit_per_show=args.limit)
+    print(f"\nDone. {stats['ok']} maps ok, {stats['failed']} failed.")
+
+
+async def _run_standing(args):
+    settings = Settings()
+    conn = db.connect(args.database)
+    shows = [s for s in load_shows(args.shows) if s.get("track_standing")]
+    print(f"Reading standing places for {len(shows)} show(s), next {args.days} days\n")
+    async with Session(settings) as session:
+        stats = await collect_standing(conn, session, shows, days=args.days)
     print(f"\nDone. {stats['ok']} maps ok, {stats['failed']} failed.")
 
 
@@ -206,6 +216,9 @@ def main(argv=None):
     s.add_argument("--limit", type=int, default=6, help="performances per show")
     s.add_argument("--only", nargs="*")
 
+    st = sub.add_parser("standing", help="record standing places for shows marked track_standing")
+    st.add_argument("--days", type=int, default=8, help="performances this many days ahead")
+
     p = sub.add_parser("probe", help="inspect one page to fix a broken selector")
     p.add_argument("url")
     p.add_argument("--wait", default=None, help="CSS selector to wait for")
@@ -225,6 +238,8 @@ def main(argv=None):
         asyncio.run(_run_calendars(args))
     elif args.cmd == "seats":
         asyncio.run(_run_seats(args))
+    elif args.cmd == "standing":
+        asyncio.run(_run_standing(args))
     elif args.cmd == "probe":
         asyncio.run(_run_probe(args))
     elif args.cmd == "report":

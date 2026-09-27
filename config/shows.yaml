@@ -24,6 +24,10 @@ shows:
     venue: "Lyceum Theatre"
     atg_show_slug: "disneys-the-lion-king"
     atg_venue_slug: "lyceum-theatre"
+    # 29 "Row Standing" places on ATG's seat map, all "Sold out" until the
+    # box office releases them (the official Lion King site doesn't sell
+    # them). `standing` records when they open. See collect_standing().
+    track_standing: true
 
   - key: stranger-things-phoenix
     operator: atg

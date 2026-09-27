@@ -172,6 +172,39 @@ def record_price(conn, performance_id, min_price, availability_band, source_url,
     )
 
 
+def record_seat_states(conn, performance_id, seats, now=None):
+    """Delta-write seat_state only: a row for each seat whose availability
+    or price differs from the last reading. No seat_snapshot row — for the
+    standing places, where a snapshot of a 29-place row would sit among
+    whole-house snapshots and mean something different.
+
+    seats: objects or dicts with seat_ref, available, price."""
+    now = now or utcnow()
+    get = lambda s, k: s[k] if isinstance(s, dict) else getattr(s, k)
+    last = {
+        r["seat_ref"]: (r["available"], r["price"])
+        for r in conn.execute(
+            """SELECT seat_ref, available, price FROM seat_state s1
+               WHERE performance_id=?
+                 AND observed_at=(SELECT MAX(observed_at) FROM seat_state s2
+                                  WHERE s2.performance_id=s1.performance_id
+                                    AND s2.seat_ref=s1.seat_ref)""",
+            (performance_id,),
+        )
+    }
+    changed = 0
+    for s in seats:
+        cur = (1 if get(s, "available") else 0, get(s, "price"))
+        if last.get(get(s, "seat_ref")) != cur:
+            conn.execute(
+                """INSERT INTO seat_state(performance_id, seat_ref, observed_at, available, price)
+                   VALUES (?,?,?,?,?)""",
+                (performance_id, get(s, "seat_ref"), now, cur[0], cur[1]),
+            )
+            changed += 1
+    return changed
+
+
 def record_seats(conn, performance_id, seats, source_url):
     """seats: list of dicts {seat_ref, available: bool, price: float|None}"""
     now = utcnow()
