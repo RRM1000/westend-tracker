@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 import yaml
 
 from . import db, parsers
+from .parsers.base import Seat
 from .browser import Session, Settings, Unavailable
 
 
@@ -150,15 +151,21 @@ async def collect_standing(conn, session: Session, shows, days=8, verbose=True):
     for show in [s for s in shows if s.get("track_standing")]:
         P = parsers.get(show["operator"])
         rows = conn.execute(
-            """SELECT id, url, starts_at FROM performance
+            """SELECT id, external_id, url, starts_at FROM performance
                WHERE show_key=? AND starts_at >= datetime('now')
                  AND starts_at < datetime('now', ?)
                ORDER BY starts_at""",
             (show["key"], f"+{days} days"),
         ).fetchall()
+        # The JSON ticketing platform (Delfont Mackintosh, Nimax, @sohoplace)
+        # is read from its inventory feed, which lists only what's on sale:
+        # a standing place appears there once released, with its price.
+        json_feed = hasattr(P, "SERIES_KEY")
         for row in rows:
             url = row["url"]
-            if not url or ("/performance/" not in url and "/tickets/" not in url):
+            if json_feed:
+                url = f"{P.BASE}/api/consumer/eventinventory/{row['external_id']}?"
+            elif not url or ("/performance/" not in url and "/tickets/" not in url):
                 continue
             try:
                 page, _ = await session.load(url, wait_for=P.seat_wait_selector())
@@ -168,7 +175,16 @@ async def collect_standing(conn, session: Session, shows, days=8, verbose=True):
                     print(f"  ! {url}\n    {e}")
                 continue
             try:
-                seats = [s for s in await P.parse_seats(page) if "standing" in (s.raw_label or "").lower()]
+                seats = [s for s in await P.parse_seats(page) if "stand" in (s.raw_label or "").lower()]
+                if json_feed:
+                    # Only places on sale are listed, so one we saw before and
+                    # can't see now has gone: record it as unavailable.
+                    seen = {s.seat_ref for s in seats}
+                    for (ref,) in conn.execute(
+                            "SELECT DISTINCT seat_ref FROM seat_state WHERE performance_id=? AND seat_ref LIKE '%stand%'",
+                            (row["id"],)):
+                        if ref not in seen:
+                            seats.append(Seat(seat_ref=ref, available=False, price=None, raw_label=ref))
                 if not seats:
                     if verbose:
                         print(f"  - {show['key']:<28} {row['starts_at']}  no standing places on the map")
