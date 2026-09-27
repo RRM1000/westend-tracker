@@ -104,6 +104,12 @@ shows:
     venue: "Lyric Theatre"
     nimax_series_code: "LYHDT01M"
 
+  - key: white-rabbit-red-rabbit-duchess
+    operator: nimax
+    title: "White Rabbit Red Rabbit"
+    venue: "Duchess Theatre"
+    nimax_series_code: "DUWRR01C"
+
   - key: producers-garrick
     operator: nimax
     title: "Mel Brooks' The Producers"
