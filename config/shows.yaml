@@ -49,6 +49,10 @@ shows:
     venue: "Playhouse Theatre (Kit Kat Club)"
     atg_show_slug: "cabaret"
     atg_venue_slug: "kit-kat-club-at-the-playhouse"
+    # Four "STANDING" places on ATG's seat map, none on sale for 3 or 5 Oct
+    # 2026 and nothing on kitkat.club about them. Recording whether they are
+    # ever released, and when, before the site says anything about them.
+    track_standing: true
 
   - key: oh-mary-trafalgar
     operator: atg
