@@ -121,17 +121,21 @@ async def _collect_show_calendar(conn, session, show, months, verbose, stats):
                 continue
             # No await between here and the commit, so another site's
             # coroutine can never commit half of this page's rows.
+            changed = 0
             for p in perfs:
                 pid = db.upsert_performance(conn, show["key"], p.external_id,
                                             p.starts_at, p.url)
-                db.record_price(conn, pid, p.min_price, p.availability_band,
-                                url, days_to_perf=_days_to(p.starts_at),
-                                price_bands=p.price_bands)
+                # True only when the price or availability differs from the
+                # performance's latest reading; otherwise that reading is
+                # just confirmed again (see db.record_price).
+                changed += db.record_price(conn, pid, p.min_price, p.availability_band,
+                                           url, days_to_perf=_days_to(p.starts_at),
+                                           price_bands=p.price_bands)
             conn.commit()
             stats["ok"] += 1
             if verbose:
                 print(f"  + {show['key']:<28} {url.rsplit('/',1)[-1]:<14} "
-                      f"{len(perfs):>3} performances")
+                      f"{len(perfs):>3} performances, {changed:>3} new or changed")
         finally:
             await page.close()
 

@@ -9,6 +9,7 @@ import os
 import sqlite3
 import sys
 import tempfile
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -242,17 +243,303 @@ def test_snapshot_maths_matches_the_live_reading():
         conn.close()
 
 
-def test_price_observations_are_append_only():
+def test_price_changes_are_kept_in_order():
+    """A changed price is never written over: both stay, oldest first, each with
+    the moment it was first seen."""
     with tempfile.TemporaryDirectory() as tmp:
         conn = db.connect(os.path.join(tmp, "t.db"))
         pid = _seed(conn)
-        db.record_price(conn, pid, 59.50, "Medium availability", "u")
-        db.record_price(conn, pid, 45.00, "Good availability", "u")
+        db.record_price(conn, pid, 59.50, "Medium availability", "u", now="2026-09-01T05:00:00+00:00")
+        db.record_price(conn, pid, 45.00, "Good availability", "u", now="2026-09-02T05:00:00+00:00")
         rows = conn.execute(
-            "SELECT min_price FROM price_observation WHERE performance_id=? ORDER BY id",
+            "SELECT min_price, first_seen FROM price_reading WHERE performance_id=? ORDER BY first_seen",
             (pid,)).fetchall()
-        assert [r["min_price"] for r in rows] == [59.50, 45.00]
+        assert [(r["min_price"], r["first_seen"][:10]) for r in rows] == \
+            [(59.50, "2026-09-01"), (45.00, "2026-09-02")]
         conn.close()
+
+
+NIGHTS = ["2026-09-01T05:00:10+00:00", "2026-09-02T09:30:00+00:00", "2026-09-03T04:05:00+00:00",
+          "2026-09-04T10:50:00+00:00", "2026-09-05T06:00:00+00:00"]
+
+
+def _days_to(starts_at, seen):
+    run = datetime.fromisoformat(seen).replace(tzinfo=None)
+    return (datetime.fromisoformat(starts_at) - run).days
+
+
+def test_unchanged_reading_extends_instead_of_inserting():
+    """The point of the whole change: the same price and availability seen on
+    five nights is ONE row, with last_seen moved forward, not five."""
+    with tempfile.TemporaryDirectory() as tmp:
+        conn = db.connect(os.path.join(tmp, "t.db"))
+        pid = _seed(conn)
+        starts = "2026-09-20T19:30:00"
+        conn.execute("UPDATE performance SET starts_at=? WHERE id=?", (starts, pid))
+        made = [db.record_price(conn, pid, 29.5, "Good availability", "u", price_bands=[29.5, 49.5],
+                                days_to_perf=_days_to(starts, t), now=t) for t in NIGHTS]
+        assert made == [True, False, False, False, False]
+        rows = conn.execute("SELECT * FROM price_reading").fetchall()
+        assert len(rows) == 1
+        assert rows[0]["first_seen"] == NIGHTS[0] and rows[0]["last_seen"] == NIGHTS[-1]
+        # the compatibility view still shows each night, at the time of the
+        # sighting, with the days_to_perf the collector worked out then
+        view = conn.execute("SELECT observed_at, days_to_perf FROM price_observation "
+                            "ORDER BY observed_at").fetchall()
+        assert [(r["observed_at"], r["days_to_perf"]) for r in view] == \
+            [(t, _days_to(starts, t)) for t in NIGHTS]
+        # a change starts a new reading; the old one stops where it was
+        db.record_price(conn, pid, 35.0, "Medium availability", "u", now="2026-09-06T06:00:00+00:00")
+        rows = conn.execute("SELECT min_price, last_seen FROM price_reading ORDER BY id").fetchall()
+        assert [(r["min_price"], r["last_seen"]) for r in rows] == \
+            [(29.5, NIGHTS[-1]), (35.0, "2026-09-06T06:00:00+00:00")]
+        conn.close()
+
+
+def test_a_missed_night_is_not_papered_over():
+    """If the run failed on the 2nd and 3rd, a price seen again on the 4th is a
+    new reading: the view must not claim we looked on days we did not."""
+    with tempfile.TemporaryDirectory() as tmp:
+        conn = db.connect(os.path.join(tmp, "t.db"))
+        pid = _seed(conn)
+        for t in (NIGHTS[0], NIGHTS[3], NIGHTS[4]):
+            db.record_price(conn, pid, 29.5, "Good availability", "u", now=t)
+        assert conn.execute("SELECT COUNT(*) FROM price_reading").fetchone()[0] == 2
+        days = [r[0][:10] for r in conn.execute("SELECT observed_at FROM price_observation ORDER BY observed_at")]
+        assert days == ["2026-09-01", "2026-09-04", "2026-09-05"], days
+        conn.close()
+
+
+def _old_layout_db(path, sightings):
+    """A database as the collector wrote it before readings: one price_observation
+    row per sighting. sightings: (performance 'A' or 'B', observed_at, price,
+    bands json, availability, on_sale)."""
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE show (key TEXT PRIMARY KEY, operator TEXT NOT NULL, title TEXT NOT NULL,
+                           venue TEXT, config_json TEXT, first_seen TEXT NOT NULL, last_seen TEXT NOT NULL);
+        CREATE TABLE performance (id INTEGER PRIMARY KEY AUTOINCREMENT, show_key TEXT NOT NULL,
+                           external_id TEXT NOT NULL, starts_at TEXT NOT NULL, url TEXT,
+                           UNIQUE(show_key, external_id));
+        CREATE TABLE price_observation (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                           performance_id INTEGER NOT NULL, observed_at TEXT NOT NULL, days_to_perf INTEGER,
+                           min_price REAL, price_bands_json TEXT, availability_band TEXT,
+                           on_sale INTEGER NOT NULL DEFAULT 1, source_url TEXT);
+        CREATE INDEX ix_obs_perf ON price_observation(performance_id, observed_at);
+        INSERT INTO show VALUES ('s', 'atg', 'S', 'V', '{}', '2026-09-01', '2026-09-01');
+        INSERT INTO performance(show_key, external_id, starts_at) VALUES
+            ('s', 'A', '2026-09-20T14:30:00'), ('s', 'B', '2026-09-20T19:30:00');""")
+    ids = {"A": 1, "B": 2}
+    starts = {"A": "2026-09-20T14:30:00", "B": "2026-09-20T19:30:00"}
+    for ext, at, price, bands, band, on_sale in sightings:
+        old.execute("""INSERT INTO price_observation (performance_id, observed_at, days_to_perf, min_price,
+                       price_bands_json, availability_band, on_sale, source_url) VALUES (?,?,?,?,?,?,?,?)""",
+                    (ids[ext], at, _days_to(starts[ext], at), price, bands, band, on_sale, "u"))
+    old.commit()
+    old.close()
+
+
+# Sightings with the awkward cases: a price that changes, the same price seen
+# twice in one morning (a performance on two calendar pages), an afternoon run,
+# a missed night (A on the 5th), and a performance sold out (no price) and back.
+SIGHTINGS = [
+    ("A", "2026-09-01T05:00:10+00:00", 29.5, "[29.5, 49.5]", "Good availability", 1),
+    ("B", "2026-09-01T05:00:11+00:00", 39.5, None, "Good availability", 1),
+    ("A", "2026-09-01T05:09:00+00:00", 29.5, "[29.5, 49.5]", "Good availability", 1),
+    ("A", "2026-09-02T09:30:00+00:00", 29.5, "[29.5, 49.5]", "Good availability", 1),
+    ("B", "2026-09-02T09:30:01+00:00", 39.5, None, "Good availability", 1),
+    ("A", "2026-09-02T15:10:00+00:00", 29.5, "[29.5, 49.5]", "Good availability", 1),
+    ("A", "2026-09-03T04:05:00+00:00", 29.5, "[29.5, 49.5]", "Good availability", 1),
+    ("B", "2026-09-03T04:05:01+00:00", None, None, "Low availability", 1),
+    ("A", "2026-09-04T10:50:00+00:00", 34.5, "[34.5, 49.5]", "Medium availability", 1),
+    ("B", "2026-09-04T10:50:01+00:00", None, None, "Low availability", 1),
+    ("B", "2026-09-05T06:00:01+00:00", None, None, "Low availability", 1),
+    ("A", "2026-09-06T06:00:00+00:00", 34.5, "[34.5, 49.5]", "Medium availability", 1),
+    ("B", "2026-09-06T06:00:01+00:00", 39.5, None, "Good availability", 1),
+]
+
+
+def _per_day_last(rows):
+    """{(performance, UTC day): (observed_at, days_to_perf, values)} for the LAST
+    sighting of each day: what every reader of price_observation ends up with,
+    because they all take the latest of a day (or the latest overall)."""
+    out = {}
+    for pid, at, days, price, bands, band, on_sale in sorted(rows, key=lambda r: (r[0], r[1])):
+        out[(pid, at[:10])] = (at, days, (price, bands, band, on_sale))
+    return out
+
+
+def test_conversion_reproduces_every_day_of_the_old_table():
+    """Converting an old-layout database must give back, through price_observation,
+    the same last sighting for every performance on every day -- same time of day,
+    same days_to_perf, same price/bands/availability -- and nothing for a day nobody
+    looked (A on the 5th)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "old.db")
+        _old_layout_db(path, SIGHTINGS)
+        q = ("SELECT performance_id, observed_at, days_to_perf, min_price, price_bands_json, "
+             "availability_band, on_sale FROM price_observation")
+        raw = sqlite3.connect(path)
+        before = _per_day_last([tuple(r) for r in raw.execute(q)])
+        raw.close()
+
+        conn = db.connect(path)                      # converts
+        kind = conn.execute("SELECT type FROM sqlite_master WHERE name='price_observation'").fetchone()[0]
+        assert kind == "view"
+        after = _per_day_last([tuple(r) for r in conn.execute(q)])
+        assert after == before
+        assert (1, "2026-09-05") not in after
+        # fewer rows stored than sightings made
+        assert conn.execute("SELECT COUNT(*) FROM price_reading").fetchone()[0] < len(SIGHTINGS)
+        # converting again changes nothing
+        assert db.upgrade_to_readings(conn) is None
+        conn.close()
+
+
+def test_nightly_writes_agree_with_conversion():
+    """Writing the sightings one at a time with record_price must leave the
+    same readings as converting the same sightings written the old way."""
+    with tempfile.TemporaryDirectory() as tmp:
+        old_path, new_path = os.path.join(tmp, "old.db"), os.path.join(tmp, "new.db")
+        _old_layout_db(old_path, SIGHTINGS)
+        converted = db.connect(old_path)
+
+        fresh = db.connect(new_path)
+        db.upsert_show(fresh, "s", "atg", "S", "V", "{}")
+        starts = {"A": "2026-09-20T14:30:00", "B": "2026-09-20T19:30:00"}
+        ids = {ext: db.upsert_performance(fresh, "s", ext, starts[ext], None) for ext in starts}
+        for ext, at, price, bands, band, on_sale in SIGHTINGS:
+            db.record_price(fresh, ids[ext], price, band, "u", days_to_perf=_days_to(starts[ext], at),
+                            on_sale=bool(on_sale), price_bands=json.loads(bands) if bands else None, now=at)
+        cols = ("performance_id, first_seen, last_seen, first_days_to_perf, last_days_to_perf, day_times, "
+                "min_price, price_bands_json, availability_band, on_sale")
+        a = [tuple(r) for r in converted.execute(f"SELECT {cols} FROM price_reading ORDER BY 1, 2")]
+        b = [tuple(r) for r in fresh.execute(f"SELECT {cols} FROM price_reading ORDER BY 1, 2")]
+        assert a == b, (a, b)
+        converted.close(); fresh.close()
+
+
+def test_archive_moves_old_readings_and_restores_them():
+    from wet import archive
+    with tempfile.TemporaryDirectory() as tmp:
+        conn = db.connect(os.path.join(tmp, "t.db"))
+        db.upsert_show(conn, "s", "atg", "S", "V", "{}")
+        old_a = db.upsert_performance(conn, "s", "old-a", "2026-01-10T19:30:00", None)
+        old_b = db.upsert_performance(conn, "s", "old-b", "2027-01-05T19:30:00", None)   # another year
+        new = db.upsert_performance(conn, "s", "new", "2026-12-20T19:30:00", None)
+        for pid in (old_a, old_b, new):
+            for t, price in (("2026-01-01T05:00:00+00:00", 29.5), ("2026-01-02T05:00:00+00:00", 29.5),
+                             ("2026-01-03T05:00:00+00:00", 35.0)):
+                db.record_price(conn, pid, price, "Good availability", "u", price_bands=[price, 80.0],
+                                days_to_perf=9, now=t)
+        total = conn.execute("SELECT COUNT(*) FROM price_reading").fetchone()[0]       # 6: two per performance
+        adir = os.path.join(tmp, "archive")
+
+        # a dry run reports and changes nothing
+        assert archive.archive_old_readings(conn, adir, 180, dry_run=True, today="2026-12-31") == {"2026": 2}
+        assert conn.execute("SELECT COUNT(*) FROM price_reading").fetchone()[0] == total
+        assert not os.path.exists(adir)
+
+        # only old-a started more than 180 days before the end of 2026
+        assert archive.archive_old_readings(conn, adir, 180, today="2026-12-31") == {"2026": 2}
+        assert conn.execute("SELECT COUNT(*) FROM price_reading").fetchone()[0] == total - 2
+        f = archive.archive_path(adir, 2026)
+        assert os.path.exists(f) and not os.path.exists(archive.archive_path(adir, 2027))
+
+        # later more has aged out: the 2026 file gains the December performance, a 2027
+        # file appears, and a run with nothing new to move leaves the bytes alone
+        assert archive.archive_old_readings(conn, adir, 180, today="2028-01-01") == {"2026": 2, "2027": 2}
+        assert len(list(archive.read_archive(f))) == 4
+        first = open(f, "rb").read()
+        assert archive.archive_old_readings(conn, adir, 180, today="2028-01-01") == {}
+        assert open(f, "rb").read() == first
+
+        # restoring into a fresh database brings back identical readings
+        other = db.connect(os.path.join(tmp, "other.db"))
+        assert archive.restore(other, adir) == 6
+        assert archive.restore(other, adir) == 0                      # already there
+        got = [tuple(r) for r in other.execute(
+            """SELECT p.external_id, r.first_seen, r.last_seen, r.min_price, r.price_bands_json,
+                      r.first_days_to_perf, r.availability_band, r.on_sale
+                 FROM price_reading r JOIN performance p ON p.id=r.performance_id
+                ORDER BY 1, 2""")]
+        assert got[:2] == [
+            ("new", "2026-01-01T05:00:00+00:00", "2026-01-02T05:00:00+00:00", 29.5, "[29.5, 80.0]", 9,
+             "Good availability", 1),
+            ("new", "2026-01-03T05:00:00+00:00", "2026-01-03T05:00:00+00:00", 35.0, "[35.0, 80.0]", 9,
+             "Good availability", 1)], got
+        assert len(got) == 6
+        conn.close(); other.close()
+
+
+def _merge_module():
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+    import merge_sqlite_db
+    return merge_sqlite_db
+
+
+def test_merge_driver_unions_two_collectors():
+    """The 05:00 CI run wrote more nights while a local clone was converted: the
+    merge keeps both sides' readings, extends a reading the other side confirmed
+    later, and accepts an other side still in the old layout."""
+    merge_sqlite_db = _merge_module()
+    with tempfile.TemporaryDirectory() as tmp:
+        ours_p, theirs_p = os.path.join(tmp, "ours.db"), os.path.join(tmp, "theirs.db")
+        _old_layout_db(theirs_p, SIGHTINGS)               # theirs: old layout, all the sightings
+        ours = db.connect(ours_p)                          # ours: new layout, A's first nights only
+        db.upsert_show(ours, "s", "atg", "S", "V", "{}")
+        a = db.upsert_performance(ours, "s", "A", "2026-09-20T14:30:00", None)
+        for ext, at, price, bands, band, on_sale in SIGHTINGS:
+            if ext == "A" and at < "2026-09-04":
+                db.record_price(ours, a, price, band, "u", price_bands=json.loads(bands),
+                                days_to_perf=_days_to("2026-09-20T14:30:00", at), now=at)
+        ours.commit()
+        ours.close()
+
+        added, skipped = merge_sqlite_db.merge(ours_p, theirs_p)
+        assert skipped == 0 and added > 0
+        merged = db.connect(ours_p)
+        want = db.connect(theirs_p)                        # already converted by the merge
+        cols = "p.external_id, r.first_seen, r.last_seen, r.min_price, r.availability_band"
+        q = f"SELECT {cols} FROM price_reading r JOIN performance p ON p.id=r.performance_id ORDER BY 1, 2"
+        assert [tuple(r) for r in merged.execute(q)] == [tuple(r) for r in want.execute(q)]
+        merged.close(); want.close()
+
+
+def test_merge_driver_cuts_back_a_reading_a_newer_one_overlaps():
+    """One side kept confirming 29.50 to the 4th; the other saw it become 34.50
+    on the 3rd. Both are real: the 29.50 reading is cut back to its last sighting
+    before the 3rd, and its later sightings survive as a reading of their own."""
+    merge_sqlite_db = _merge_module()
+
+    def side(path, seen):
+        c = db.connect(path)
+        db.upsert_show(c, "s", "atg", "S", "V", "{}")
+        pid = db.upsert_performance(c, "s", "A", "2026-09-20T14:30:00", None)
+        for at, price in seen:
+            db.record_price(c, pid, price, "Good availability", "u", days_to_perf=15, now=at)
+        c.commit()
+        c.close()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        ours_p, theirs_p = os.path.join(tmp, "o.db"), os.path.join(tmp, "t.db")
+        side(ours_p, [("2026-09-01T05:00:00+00:00", 29.5), ("2026-09-02T05:00:00+00:00", 29.5),
+                      ("2026-09-03T05:00:00+00:00", 29.5), ("2026-09-04T05:00:00+00:00", 29.5)])
+        side(theirs_p, [("2026-09-01T05:00:00+00:00", 29.5), ("2026-09-02T05:00:00+00:00", 29.5),
+                        ("2026-09-03T06:00:00+00:00", 34.5)])
+        merge_sqlite_db.merge(ours_p, theirs_p)
+        c = db.connect(ours_p)
+        rows = [(r["min_price"], r["first_seen"][:13], r["last_seen"][:13]) for r in c.execute(
+            "SELECT * FROM price_reading ORDER BY first_seen, id")]
+        assert rows == [(29.5, "2026-09-01T05", "2026-09-03T05"),
+                        (34.5, "2026-09-03T06", "2026-09-03T06"),
+                        (29.5, "2026-09-04T05", "2026-09-04T05")], rows
+        # and the view shows the sightings in order, none of them twice
+        seen = [(r["observed_at"][:13], r["min_price"]) for r in c.execute(
+            "SELECT observed_at, min_price FROM price_observation ORDER BY observed_at")]
+        assert seen == [("2026-09-01T05", 29.5), ("2026-09-02T05", 29.5), ("2026-09-03T05", 29.5),
+                        ("2026-09-03T06", 34.5), ("2026-09-04T05", 29.5)], seen
+        c.close()
 
 
 def test_atg_calendar_unavailable():

@@ -62,10 +62,18 @@ jobs:
       - name: Record standing places
         run: python -m wet.cli standing --days 8 || true
 
+      # Readings of performances that started more than 180 days ago move out of
+      # the database into data/archive/readings-<year>.csv.gz (committed below),
+      # which keeps data/westend.db small. Almost always a no-op: the first
+      # performances to qualify are those of late August 2026, in late February
+      # 2027. See wet/archive.py.
+      - name: Archive old readings
+        run: python -m wet.cli archive
+
       - name: Rebuild the visual report
         run: python -m wet.cli export
 
-      - name: Commit the database and report
+      - name: Commit the database, archive and report
         run: |
           git config user.name "West End Tracker bot"
           git config user.email "actions@users.noreply.github.com"
@@ -76,7 +84,7 @@ jobs:
           # binary conflict silently drops one side's readings.
           python scripts/setup_git_merge_driver.py
 
-          git add data/westend.db data/report.html
+          git add data/westend.db data/report.html data/archive
           git diff --cached --quiet && echo "Nothing new to commit." && exit 0
           git commit -m "Daily collection: $(date -u +%Y-%m-%d)"
 

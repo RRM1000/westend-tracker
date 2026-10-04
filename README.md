@@ -135,9 +135,40 @@ SQLite at `data/westend.db`. No server to run.
 | Table | What it holds |
 |---|---|
 | `show`, `performance` | The registry |
-| `price_observation` | **The core asset.** One row per performance per day: from-price, and ATG's own availability rating. Append-only — never updated, because overwriting a price destroys the history |
+| `price_reading` | **The core asset.** One row per *stretch of time* a performance showed the same from-price, price bands, availability and on-sale flag: `first_seen` / `last_seen` bracket it. A new row starts only when something changes (or after a night we missed); an unchanged night just moves `last_seen` forward. Never rewritten otherwise, because overwriting a price destroys the history |
+| `price_observation` | A **view** that expands `price_reading` back into one row per sighting day (`observed_at`, `days_to_perf`, `min_price`, ...), so anything written against the old one-row-per-night table still works. Read-only |
 | `seat_snapshot` | One row per seat-map capture: totals, price-band counts, estimated gross range |
 | `seat_state` | One row per seat, **written only when its state changes**. A full daily snapshot of every house would be ~30m rows a year for very little extra signal |
+
+### Why readings, and the size of the file
+
+The collector used to add a row per performance per night (about 6,000 rows,
+1.2 MB a night); at 56 MB the committed file was heading for GitHub's 100 MB
+limit. Now `wet.db.record_price` compares each sighting with the performance's
+latest reading and only inserts when the price or availability differs. About
+150-250 readings change on an ordinary night, so the file grows by roughly
+0.1 MB a night, and git stores about 0.8 MB per nightly commit instead of 6 MB.
+
+Two things to know when reading it:
+
+- `price_observation.observed_at` for the *last* row of a reading is `last_seen`,
+  so "latest reading" and "seen in the last three days" keep their meaning.
+- The view is convenient, not fast: a query that **joins** it reads all of it
+  (about 0.5 s each; the report and `history` still run in a couple of seconds);
+  lookups of one performance at a time cost nothing. New code that only needs
+  readings, not one row per day, should read `price_reading` directly.
+
+An older database (a TABLE called `price_observation`) is converted when the
+code first opens it (`wet.db.upgrade_to_readings`), after checking that the new
+rows reproduce every sighting. `python -m wet.cli compact` does the same and
+VACUUMs.
+
+### Archive
+
+Readings of performances that started more than 180 days ago are moved by
+`python -m wet.cli archive` (a nightly workflow step) into
+`data/archive/readings-<year>.csv.gz`. See `data/archive/README.md` for the
+columns and how to read or restore them.
 
 A useful first query once you have a few weeks:
 
@@ -179,7 +210,9 @@ Not legal advice — take proper advice before you charge anyone for this.
 python tests\test_core.py
 ```
 
-Covers the date parsing, money extraction, seat-reference normalisation and the
+Covers the date parsing, money extraction, seat-reference normalisation, the
+change-only price storage (including that converting the old table and writing
+nightly give the same rows, and the git merge driver), the archive and the
 delta-write logic — including a case that reproduces the real Wicked reading
 (2,328 seats, 1,655 gone, 71.1%). The DOM parsing needs a live page, so that's
 what `probe` is for.

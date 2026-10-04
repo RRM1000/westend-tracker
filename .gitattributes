@@ -7,3 +7,8 @@ data/westend.db merge=sqlitedb
 
 # Generated from the database; never worth a manual merge.
 data/report.html merge=ours
+
+# Yearly archives of old readings (wet/archive.py). Written deterministically,
+# so identical content is identical bytes. Never auto-merge: if two machines
+# both rewrote one, rerun `python -m wet.cli archive` after resolving by hand.
+data/archive/*.csv.gz -merge -diff

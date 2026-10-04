@@ -4,12 +4,18 @@
     python -m wet.cli seats --limit 6      # phase 2, focused
     python -m wet.cli report               # what's in the database
     python -m wet.cli probe <url>          # debug a page that won't parse
+    python -m wet.cli compact              # convert/shrink the database (VACUUM)
+    python -m wet.cli archive              # move old readings to data/archive/
+    python -m wet.cli restore --year 2026  # ... and read them back
 """
 
 import argparse
 import asyncio
 import sys
 
+import os
+
+from . import archive as archive_mod
 from . import db
 from .browser import Session, Settings
 from .collect import collect_calendars, collect_seats, collect_standing, load_shows
@@ -202,6 +208,54 @@ def _export(args):
     print("Open it by double-clicking, or run:  start " + args.out)
 
 
+def _size_mb(path):
+    return os.path.getsize(path) / 1e6 if os.path.exists(path) else 0.0
+
+
+def _vacuum(conn, path):
+    """Checkpoint the WAL into the main file and rewrite it compactly, so the
+    one file git commits is complete and as small as it can be."""
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    conn.execute("VACUUM")
+    conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+
+def _compact(args):
+    """Opening the database converts an old-layout file to readings (db.connect
+    does it, after checking the result reproduces every sighting). This makes
+    sure that has happened and then VACUUMs."""
+    before = _size_mb(args.database)
+    conn = db.connect(args.database)
+    n = conn.execute("SELECT COUNT(*) c FROM price_reading").fetchone()["c"]
+    _vacuum(conn, args.database)
+    conn.close()
+    print(f"{args.database}: {n:,} readings. {before:.1f} MB -> {_size_mb(args.database):.1f} MB")
+
+
+def _archive(args):
+    conn = db.connect(args.database)
+    moved = archive_mod.archive_old_readings(
+        conn, directory=args.dir, older_than_days=args.older_than_days, dry_run=args.dry_run)
+    if not moved:
+        print(f"Nothing to archive: no readings for performances older than "
+              f"{args.older_than_days} days.")
+    for year, n in moved.items():
+        print(f"{'Would move' if args.dry_run else 'Moved'} {n:,} readings to "
+              f"{archive_mod.archive_path(args.dir, year)}")
+    if moved and not args.dry_run:
+        before = _size_mb(args.database)
+        _vacuum(conn, args.database)
+        print(f"{args.database}: {before:.1f} MB -> {_size_mb(args.database):.1f} MB")
+    conn.close()
+
+
+def _restore(args):
+    conn = db.connect(args.database)
+    n = archive_mod.restore(conn, directory=args.dir, year=args.year, show=args.show)
+    print(f"Restored {n:,} readings into {args.database}")
+    conn.close()
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="wet", description="West End ticket data collector")
     ap.add_argument("--database", default="data/westend.db")
@@ -233,8 +287,27 @@ def main(argv=None):
     h.add_argument("--show", help="show key, for a per-performance grid")
     h.add_argument("--limit", type=int, default=25, help="performances to show")
 
+    sub.add_parser("compact", help="convert an old-layout database to readings and VACUUM it")
+
+    a = sub.add_parser("archive", help="move readings of long-past performances to data/archive/")
+    a.add_argument("--older-than-days", type=int, default=archive_mod.DEFAULT_OLDER_THAN_DAYS,
+                   help="performances that started more than this many days ago (default %(default)s)")
+    a.add_argument("--dir", default=archive_mod.DEFAULT_DIR)
+    a.add_argument("--dry-run", action="store_true", help="say what would move, change nothing")
+
+    r = sub.add_parser("restore", help="read archived readings back into a database")
+    r.add_argument("--year", type=int, help="only this year's file (default: all)")
+    r.add_argument("--show", help="only this show key")
+    r.add_argument("--dir", default=archive_mod.DEFAULT_DIR)
+
     args = ap.parse_args(argv)
-    if args.cmd == "calendars":
+    if args.cmd == "compact":
+        _compact(args)
+    elif args.cmd == "archive":
+        _archive(args)
+    elif args.cmd == "restore":
+        _restore(args)
+    elif args.cmd == "calendars":
         asyncio.run(_run_calendars(args))
     elif args.cmd == "seats":
         asyncio.run(_run_seats(args))
