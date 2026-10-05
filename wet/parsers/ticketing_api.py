@@ -51,31 +51,48 @@ PRICE_SAMPLE = 8
 PRICE_GAP = 2.5
 
 
-def available_bands(inv: dict | None) -> list[float] | None:
+def _bookable_prices(inv: dict | None, field: str = "price",
+                     exclude_packages: bool = False) -> list[float]:
+    """Prices on offer for one performance, read from `field` of each priceMap.
+
+    `field` is "price" (the face value, before any booking fee) unless a
+    venue's own seat map shows the fee-inclusive "displayRetailPrice" as its
+    headline, as the Troubadour theatres' does (see kx.py). `exclude_packages`
+    drops levels that can only be bought as part of a package (a VIP bundle
+    with a drink, a box): a customer who wants a seat cannot pick them, so
+    they are not a price for a seat."""
+    if not inv:
+        return []
+    out = []
+    for p in inv.get("priceMaps") or []:
+        if exclude_packages and p.get("requirePackagePurchase"):
+            continue
+        v = p.get(field)
+        if isinstance(v, (int, float)):
+            out.append(float(v))
+    return out
+
+
+def available_bands(inv: dict | None, field: str = "price",
+                    exclude_packages: bool = False) -> list[float] | None:
     """Every distinct price still on sale for this performance.
 
     priceMaps lists only bands with seats remaining, so this shrinks from the
     bottom as a house fills — which is the signal, not a defect. Callers
     publishing these must check availability first; see record_price.
     """
-    if not inv:
-        return None
-    prices = {p.get("price") for p in (inv.get("priceMaps") or [])
-              if isinstance(p.get("price"), (int, float))}
-    return sorted(float(p) for p in prices) or None
+    return sorted(set(_bookable_prices(inv, field, exclude_packages))) or None
 
 
-def cheapest_from_inventory(inv: dict | None) -> float | None:
+def cheapest_from_inventory(inv: dict | None, field: str = "price",
+                            exclude_packages: bool = False) -> float | None:
     """Cheapest price a customer could actually choose for this performance.
 
     Returns None when we could not read the inventory — which is different
     from "the show is expensive", so never coerce it to zero.
     """
-    if not inv:
-        return None
-    prices = [p.get("price") for p in (inv.get("priceMaps") or [])
-              if isinstance(p.get("price"), (int, float))]
-    return float(min(prices)) if prices else None
+    prices = _bookable_prices(inv, field, exclude_packages)
+    return min(prices) if prices else None
 
 
 async def _fetch_json(page, path: str):
@@ -95,11 +112,25 @@ async def _fetch_json(page, path: str):
 
 
 class TicketingApiParser:
-    """Subclass and set BASE, SERIES_KEY and operator."""
+    """Subclass and set BASE, SERIES_KEY and operator.
+
+    Two optional settings, for venues whose data needs it (both default to the
+    behaviour every earlier operator was collected with, so changing them for
+    one operator never rewrites another's history):
+
+      PRICE_FIELD       "price" is the face value before any booking fee. Set
+                        "displayRetailPrice" where the venue's own seat map
+                        headlines the fee-inclusive figure (the Troubadour
+                        theatres: £72.50 face + £2.50 fees is sold as "£75").
+      EXCLUDE_PACKAGES  True to leave out price levels with
+                        requirePackagePurchase (VIP bundles, boxes).
+    """
 
     BASE = ""
     SERIES_KEY = ""
     operator = ""
+    PRICE_FIELD = "price"
+    EXCLUDE_PACKAGES = False
 
     # ---- calendar -------------------------------------------------------
 
@@ -152,8 +183,10 @@ class TicketingApiParser:
                 await asyncio.sleep(PRICE_GAP)
             inv = await _fetch_json(
                 page, f"{cls.BASE}/api/consumer/eventinventory/{perf.external_id}?")
-            perf.min_price = cheapest_from_inventory(inv)
-            perf.price_bands = available_bands(inv)
+            perf.min_price = cheapest_from_inventory(
+                inv, cls.PRICE_FIELD, cls.EXCLUDE_PACKAGES)
+            perf.price_bands = available_bands(
+                inv, cls.PRICE_FIELD, cls.EXCLUDE_PACKAGES)
 
         return out
 

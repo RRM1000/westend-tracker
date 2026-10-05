@@ -1,13 +1,17 @@
 from .atg import ATGParser
 from .charingcross import CharingCrossParser
+from .comealive import ComeAliveParser
 from .delfont import DelfontParser
+from .kx import HungerGamesParser, KXParser
 from .lw import LWParser
+from .marylebone import MaryleboneParser
 from .menier import MenierParser
 from .nederlander import NederlanderParser
 from .nimax import NimaxParser
 from .shaftesbury import ShaftesburyParser
 from .spektrix import SpektrixParser
 from .sohoplace import SohoPlaceParser
+from .witness import WitnessParser
 
 REGISTRY = {
     "atg": ATGParser,
@@ -19,6 +23,11 @@ REGISTRY = {
     "nederlander": NederlanderParser,
     "shaftesbury": ShaftesburyParser,
     "charingcross": CharingCrossParser,
+    "kx": KXParser,
+    "hungergames": HungerGamesParser,
+    "marylebone": MaryleboneParser,
+    "comealive": ComeAliveParser,
+    "witness": WitnessParser,
     "spektrix": SpektrixParser,
 }
 

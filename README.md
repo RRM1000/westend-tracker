@@ -122,9 +122,21 @@ Savoy, Piccadilly, Phoenix, Harold Pinter, Duke of York's, Fortune, Ambassadors
 and Playhouse. LW gives you the Cambridge, Palladium, Drury Lane, Adelphi,
 Gillian Lynne and His Majesty's.
 
-**Not yet covered:** Nimax, Delfont Mackintosh, the Ticketmaster-run houses,
-the subsidised theatres (mostly Spektrix), and off-West-End. Each is a new file
-in `wet/parsers/` implementing four methods — deliberately a small contract.
+**TixTrack / Nliven / KX Tickets** (Nimax, Delfont Mackintosh, Nederlander,
+Shaftesbury, Charing Cross, Menier, @sohoplace, the Troubadour theatres, Marylebone,
+Come Alive, Witness for the Prosecution) — one shared parser, `ticketing_api.py`.
+The series code is the `CODE` in the show's booking link
+`.../shop/tickets/series/CODE`. A new venue on this platform is a four-line
+subclass with its own `BASE`. Two per-venue switches, both defaulting to what
+every earlier operator was collected with: `PRICE_FIELD` (`"price"` is the face
+value; use `"displayRetailPrice"` where the venue's own seat map headlines the
+fee-inclusive figure, as the Troubadour theatres do) and `EXCLUDE_PACKAGES`
+(drop VIP bundles that can't be bought as a plain seat). Check which a venue
+needs by comparing the API with what its seat map shows a customer.
+
+**Not yet covered:** the Ticketmaster-run houses, most subsidised theatres
+(Tessitura and others) and off-West-End. Each is a new file in `wet/parsers/`
+implementing four methods — deliberately a small contract.
 
 ---
 

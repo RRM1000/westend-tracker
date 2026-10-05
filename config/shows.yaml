@@ -313,6 +313,107 @@ shows:
     venue: "Charing Cross Theatre"
     charingcross_series_code: "JTC"
 
+  # --- Added 5 Oct 2026: shows London Theatre Geek lists that sell on the same
+  # platform (TixTrack / Nliven / KX Tickets) and were not being tracked. Each
+  # was checked to return a calendar and price levels. Series codes are the
+  # ".../shop/tickets/series/CODE" in the show's booking link.
+  #
+  # Left out although they work: Matt Forde (5 dates), Murder She Didn't Write
+  # (7 dates), Buffy Revamped (2 dates) - one-offs, see the note above - and
+  # Nerdy Prudes Must Die (APPMD01M, Apollo, from Feb 2027), whose inventory
+  # lists no price levels yet. Add it when it does.
+
+  # Troubadour theatres. The seat map headlines the fee-inclusive price, so
+  # these read displayRetailPrice and skip VIP packages (see wet/parsers/kx.py).
+  - key: hunger-games-troubadour-canary-wharf
+    operator: hungergames
+    title: "The Hunger Games On Stage"
+    venue: "Troubadour Canary Wharf Theatre"
+    hungergames_series_code: "THGOStage"
+
+  - key: high-school-musical-troubadour-wembley
+    operator: kx
+    title: "High School Musical"
+    venue: "Troubadour Wembley Park Theatre"
+    kx_series_code: "HSMUSICAL"
+
+  - key: dirty-dancing-prince-edward
+    operator: dm
+    title: "Dirty Dancing"
+    venue: "Prince Edward Theatre"
+    dm_series_code: "PETDD"
+    # On sale but nothing performs before 19 Jan 2027.
+
+  - key: derren-brown-apollo
+    operator: nimax
+    title: "Derren Brown: Only Human"
+    venue: "Apollo Theatre"
+    nimax_series_code: "APDER02M"
+
+  - key: austentatious-vaudeville
+    operator: nimax
+    title: "Austentatious"
+    venue: "Vaudeville Theatre"
+    nimax_series_code: "VAAUS01C"
+
+  - key: cirque-berserk-garrick
+    operator: nimax
+    title: "Cirque Berserk!"
+    venue: "Garrick Theatre"
+    nimax_series_code: "GACIR02M"
+    # Closes 31 Oct 2026.
+
+  - key: from-the-heart-garrick
+    operator: nimax
+    title: "From The Heart"
+    venue: "Garrick Theatre"
+    nimax_series_code: "GAFTH01M"
+    # Closes 18 Oct 2026.
+
+  - key: franz-and-marie-charing-cross
+    operator: charingcross
+    title: "Franz & Marie"
+    venue: "Charing Cross Theatre"
+    charingcross_series_code: "FranzandMarie"
+
+  - key: wild-about-you-charing-cross
+    operator: charingcross
+    title: "Wild About You"
+    venue: "Charing Cross Theatre"
+    charingcross_series_code: "wildaboutyou"
+    # First performance 18 Jan 2027.
+
+  - key: fourteen-again-menier
+    operator: menier
+    title: "Fourteen Again"
+    venue: "Menier Chocolate Factory"
+    menier_series_code: "FOURTEENAGAIN"
+
+  - key: speculations-marylebone
+    operator: marylebone
+    title: "Speculations on the Unexplained Deaths of Several American Icons"
+    venue: "Marylebone Theatre"
+    marylebone_series_code: "Speculations"
+
+  - key: tartuffe-remixed-marylebone
+    operator: marylebone
+    title: "Tartuffe (Remixed)"
+    venue: "Marylebone Theatre"
+    marylebone_series_code: "TARTUFFEREMIXED"
+    # Closes 24 Oct 2026, nearly sold out.
+
+  - key: come-alive-empress-museum
+    operator: comealive
+    title: "Come Alive! The Greatest Showman Circus Spectacular"
+    venue: "Empress Museum"
+    comealive_series_code: "COMEALIVE"
+
+  - key: witness-for-the-prosecution-county-hall
+    operator: witness
+    title: "Witness for the Prosecution"
+    venue: "London County Hall"
+    witness_series_code: "WFTP"
+
   # --- Spektrix venues -----------------------------------------------------
   # IMPORTANT: Spektrix does not publish prices through its open API, so these
   # shows record performance dates and on-sale status only, with no price.

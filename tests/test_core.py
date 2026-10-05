@@ -16,7 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from wet import db
 from wet.collect import load_shows
 from wet.parsers.atg import ATGParser, seat_ref_for
-from wet.parsers.ticketing_api import available_bands
+from wet import parsers
+from wet.parsers.ticketing_api import available_bands, cheapest_from_inventory
 from wet.parsers.spektrix import cheapest_public_price, public_prices
 from wet.parsers.base import all_money, first_money, norm_ref, parse_uk_datetime
 
@@ -562,6 +563,55 @@ def test_closed_shows_are_not_collected():
                     "  - key: running\n    operator: atg\n"
                     "  - key: gone\n    closed: 2026-09-12\n    operator: atg\n")
         assert [s["key"] for s in load_shows(path)] == ["running"]
+
+
+def test_tixtrack_retail_price_and_package_exclusion():
+    """Real Hunger Games On Stage shape: `price` is 72.5 but the seat map
+    sells that Band A seat at £75 (face + £2.50 fees), and the VIP level can
+    only be bought as a package. Other operators keep the default behaviour."""
+    inv = {"priceMaps": [
+        {"price": 22.5, "displayRetailPrice": 25.0, "requirePackagePurchase": False},
+        {"price": 72.5, "displayRetailPrice": 75.0, "requirePackagePurchase": False},
+        {"price": 72.5, "displayRetailPrice": 75.0, "requirePackagePurchase": False},
+        {"price": 210.0, "displayRetailPrice": 212.5, "requirePackagePurchase": True},
+    ]}
+    assert available_bands(inv) == [22.5, 72.5, 210.0]                  # old behaviour
+    assert available_bands(inv, "displayRetailPrice", True) == [25.0, 75.0]
+    assert cheapest_from_inventory(inv, "displayRetailPrice", True) == 25.0
+    assert cheapest_from_inventory(inv) == 22.5
+    # nothing but packages on sale: no price, not zero
+    only_pkg = {"priceMaps": [{"price": 210.0, "requirePackagePurchase": True}]}
+    assert cheapest_from_inventory(only_pkg, "price", True) is None
+    assert available_bands(only_pkg, "price", True) is None
+    # a level missing the chosen field is skipped, not read as zero
+    assert available_bands({"priceMaps": [{"price": 30.0}]}, "displayRetailPrice") is None
+
+
+def test_troubadour_parsers_read_the_headline_price():
+    assert parsers.get("hungergames").PRICE_FIELD == "displayRetailPrice"
+    assert parsers.get("hungergames").EXCLUDE_PACKAGES is True
+    assert parsers.get("kx").PRICE_FIELD == "displayRetailPrice"
+    assert parsers.get("comealive").PRICE_FIELD == "displayRetailPrice"
+    # Everyone collected before keeps the face-value default, so history is comparable.
+    for op in ("nimax", "dm", "nederlander", "shaftesbury", "charingcross", "menier",
+               "sohoplace", "marylebone", "witness"):
+        assert parsers.get(op).PRICE_FIELD == "price", op
+        assert parsers.get(op).EXCLUDE_PACKAGES is False, op
+
+
+def test_every_configured_show_can_be_collected():
+    """A typo'd operator or a missing series code would otherwise fail on the
+    night, after the unit tests passed. Keys must be unique too."""
+    shows = load_shows()
+    keys = [s["key"] for s in shows]
+    assert len(keys) == len(set(keys)), "duplicate show key"
+    for s in shows:
+        P = parsers.get(s["operator"])          # raises on an unknown operator
+        series = getattr(P, "SERIES_KEY", None)
+        if series:
+            assert s.get(series), f"{s['key']}: missing {series}"
+            urls = P.calendar_urls(s, 1)
+            assert urls and urls[0].startswith(P.BASE), s["key"]
 
 
 if __name__ == "__main__":
