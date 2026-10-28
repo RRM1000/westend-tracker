@@ -49,6 +49,16 @@ shows:
     # 32 standing places on the seat map, none on sale 28 Oct 2026.
     track_standing: true
 
+  - key: rent-tom-stoppard
+    operator: atg
+    title: "Rent"
+    venue: "Tom Stoppard Theatre"
+    atg_show_slug: "rent"
+    atg_venue_slug: "tom-stoppard-theatre"
+    # Standing in the Upper Circle (the Duke of York's, renamed), on sale on
+    # 28 Oct 2026 for that evening only. Recording when each is released.
+    track_standing: true
+
   - key: cabaret-playhouse
     operator: atg
     title: "Cabaret"
