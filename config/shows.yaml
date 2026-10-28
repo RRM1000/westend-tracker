@@ -35,6 +35,10 @@ shows:
     venue: "Phoenix Theatre"
     atg_show_slug: "stranger-things-the-first-shadow"
     atg_venue_slug: "phoenix-theatre"
+    # 53 standing places on the seat map (Dress and Grand Circle), none on
+    # sale 28 Oct 2026; SeatPlan says the box office sells them once seats
+    # sell out. Recording whether they ever appear online.
+    track_standing: true
 
   - key: moulin-rouge-piccadilly
     operator: atg
@@ -42,6 +46,8 @@ shows:
     venue: "Piccadilly Theatre"
     atg_show_slug: "moulin-rouge-the-musical"
     atg_venue_slug: "piccadilly-theatre"
+    # 32 standing places on the seat map, none on sale 28 Oct 2026.
+    track_standing: true
 
   - key: cabaret-playhouse
     operator: atg
@@ -69,6 +75,16 @@ shows:
     atg_venue_slug: "ambassadors-theatre"
 
   # Closed 19 Sep 2026; the calendar now redirects to the show page.
+  - key: cherry-orchard-harold-pinter
+    operator: atg
+    title: "The Cherry Orchard"
+    venue: "Harold Pinter Theatre"
+    atg_show_slug: "the-cherry-orchard"
+    atg_venue_slug: "harold-pinter-theatre"
+    # £20.50 standing in the Royal Circle and Balcony, on sale on 28 Oct 2026
+    # for that week only (to Sat 31 Oct). Recording when each week's go on sale.
+    track_standing: true
+
   - key: abigails-party-harold-pinter
     closed: 2026-09-19
     operator: atg
