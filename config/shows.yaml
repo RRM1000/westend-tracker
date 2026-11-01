@@ -59,6 +59,15 @@ shows:
     # 28 Oct 2026 for that evening only. Recording when each is released.
     track_standing: true
 
+  - key: operation-mincemeat-fortune
+    operator: atg
+    title: "Operation Mincemeat"
+    venue: "Fortune Theatre"
+    atg_show_slug: "operation-mincemeat-a-new-musical"
+    atg_venue_slug: "fortune-theatre"
+    # SeatPlan: Upper Circle standing, online at 12pm on the day. Checking.
+    track_standing: true
+
   - key: cabaret-playhouse
     operator: atg
     title: "Cabaret"

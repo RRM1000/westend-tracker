@@ -1,12 +1,13 @@
 name: Standing places, hourly (ATG)
 
-# Temporary, started 1 Nov 2026: when exactly do Cabaret's and Rent's standing
-# places go on sale? The daily collection reads them once, about 11am, which
-# only says they were on sale by then. This reads today's performances every
-# hour, 8am to 7pm UK time in winter, from the committed database's list of
-# performances. It writes nothing back: the readings are in each run's log, so
-# it can't clash with the daily commit of the database. This repo is public,
-# so the minutes are free. Delete it once the release times are known.
+# Temporary, started 1 Nov 2026: when exactly do Cabaret's, Rent's and Operation
+# Mincemeat's standing places go on sale? The daily collection reads them once,
+# about 11am, which only says they were on sale by then. This reads today's
+# performances every hour, 8am to 7pm UK time in winter, using the committed
+# database's list of performances, and appends to data/standing-hourly.csv,
+# which the London Theatre Geek admin reads. It commits nothing else, so it
+# can't clash with the daily commit of the database. This repo is public, so
+# the minutes are free. Delete it once the release times are known.
 on:
   schedule:
     - cron: "5 8-19 * * *"
@@ -14,7 +15,10 @@ on:
 
 concurrency:
   group: standing-hourly
-  cancel-in-progress: true
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # to commit data/standing-hourly.csv
 
 jobs:
   read:
@@ -39,9 +43,23 @@ jobs:
           import yaml
           d = yaml.safe_load(open('config/shows.yaml', encoding='utf8'))
           shows = d['shows'] if isinstance(d, dict) else d
-          keep = [s for s in shows if s['key'] in ('cabaret-playhouse', 'rent-tom-stoppard')]
+          keep = [s for s in shows if s['key'] in ('cabaret-playhouse', 'rent-tom-stoppard', 'operation-mincemeat-fortune')]
           yaml.safe_dump({'shows': keep} if isinstance(d, dict) else keep, open('standing-hourly.yaml', 'w', encoding='utf8'), allow_unicode=True)
           PY
 
       - name: Read today's standing places
-        run: python -m wet.cli --shows standing-hourly.yaml standing --days 1
+        run: python -m wet.cli --shows standing-hourly.yaml standing --days 1 | tee standing-hourly.log
+
+      - name: Save the readings
+        run: |
+          python scripts/export_standing.py --hourly-log standing-hourly.log
+          git config user.name "West End Tracker bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/standing-hourly.csv
+          git diff --cached --quiet && echo "Nothing new to commit." && exit 0
+          git commit -m "Standing readings: $(date -u +%Y-%m-%dT%H:%M)"
+          for attempt in 1 2 3; do
+            git pull --rebase origin ${GITHUB_REF_NAME} && git push && exit 0
+            sleep 15
+          done
+          exit 1

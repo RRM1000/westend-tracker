@@ -73,6 +73,10 @@ jobs:
       - name: Rebuild the visual report
         run: python -m wet.cli export
 
+      # For the London Theatre Geek admin's Standing tickets tab.
+      - name: Export standing places
+        run: python scripts/export_standing.py
+
       - name: Commit the database, archive and report
         run: |
           git config user.name "West End Tracker bot"
@@ -84,7 +88,7 @@ jobs:
           # binary conflict silently drops one side's readings.
           python scripts/setup_git_merge_driver.py
 
-          git add data/westend.db data/report.html data/archive
+          git add data/westend.db data/report.html data/archive data/standing.json
           git diff --cached --quiet && echo "Nothing new to commit." && exit 0
           git commit -m "Daily collection: $(date -u +%Y-%m-%d)"
 
