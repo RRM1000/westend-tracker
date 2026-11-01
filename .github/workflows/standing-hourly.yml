@@ -1,0 +1,47 @@
+name: Standing places, hourly (ATG)
+
+# Temporary, started 1 Nov 2026: when exactly do Cabaret's and Rent's standing
+# places go on sale? The daily collection reads them once, about 11am, which
+# only says they were on sale by then. This reads today's performances every
+# hour, 8am to 7pm UK time in winter, from the committed database's list of
+# performances. It writes nothing back: the readings are in each run's log, so
+# it can't clash with the daily commit of the database. This repo is public,
+# so the minutes are free. Delete it once the release times are known.
+on:
+  schedule:
+    - cron: "5 8-19 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: standing-hourly
+  cancel-in-progress: true
+
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Keep only the shows being timed
+        run: |
+          python - <<'PY'
+          import yaml
+          d = yaml.safe_load(open('config/shows.yaml', encoding='utf8'))
+          shows = d['shows'] if isinstance(d, dict) else d
+          keep = [s for s in shows if s['key'] in ('cabaret-playhouse', 'rent-tom-stoppard')]
+          yaml.safe_dump({'shows': keep} if isinstance(d, dict) else keep, open('standing-hourly.yaml', 'w', encoding='utf8'), allow_unicode=True)
+          PY
+
+      - name: Read today's standing places
+        run: python -m wet.cli --shows standing-hourly.yaml standing --days 1
