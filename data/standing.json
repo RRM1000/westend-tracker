@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-01T11:27:27Z",
+ "generated_at": "2026-11-02T12:26:29Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
@@ -119,7 +119,7 @@
    ]
   },
   "cabaret-playhouse": {
-   "performances": 40,
+   "performances": 41,
    "places": 4,
    "with_places": [
     {
@@ -151,12 +151,12 @@
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 11,
+   "performances": 12,
    "places": 32,
    "with_places": []
   },
   "rent-tom-stoppard": {
-   "performances": 12,
+   "performances": 13,
    "places": 14,
    "with_places": [
     {
@@ -169,7 +169,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 10,
+   "performances": 11,
    "places": 33,
    "with_places": [
     {
@@ -245,7 +245,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 8,
+   "performances": 9,
    "places": 12,
    "with_places": []
   }
