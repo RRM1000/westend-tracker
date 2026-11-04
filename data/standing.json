@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-03T12:03:15Z",
+ "generated_at": "2026-11-04T12:19:05Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 49,
+   "performances": 51,
    "places": 29,
    "with_places": []
   },
@@ -119,7 +119,7 @@
    ]
   },
   "cabaret-playhouse": {
-   "performances": 42,
+   "performances": 44,
    "places": 4,
    "with_places": [
     {
@@ -146,7 +146,7 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 14,
+   "performances": 15,
    "places": 53,
    "with_places": []
   },
@@ -156,7 +156,7 @@
    "with_places": []
   },
   "rent-tom-stoppard": {
-   "performances": 14,
+   "performances": 15,
    "places": 14,
    "with_places": [
     {
@@ -169,7 +169,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 12,
+   "performances": 14,
    "places": 33,
    "with_places": [
     {
@@ -245,7 +245,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 11,
+   "performances": 12,
    "places": 12,
    "with_places": []
   }
