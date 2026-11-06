@@ -61,6 +61,10 @@ jobs:
           git add data/standing-hourly.csv
           git diff --cached --quiet && echo "Nothing new to commit." && exit 0
           git commit -m "Standing readings: $(date -u +%Y-%m-%dT%H:%M)"
+          # The reader also updates data/westend.db when a place changes. That file
+          # belongs to the daily commit, and a modified copy stops the rebase below,
+          # as on 6 Nov when Operation Mincemeat's places went on sale. Drop it.
+          git checkout -- data/westend.db
           for attempt in 1 2 3; do
             git pull --rebase origin ${GITHUB_REF_NAME} && git push && exit 0
             sleep 15
