@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-06T12:15:54Z",
+ "generated_at": "2026-11-07T11:22:32Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 53,
+   "performances": 55,
    "places": 29,
    "with_places": []
   },
@@ -119,7 +119,7 @@
    ]
   },
   "cabaret-playhouse": {
-   "performances": 46,
+   "performances": 48,
    "places": 4,
    "with_places": [
     {
@@ -146,17 +146,25 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 18,
+   "performances": 20,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 16,
+   "performances": 18,
    "places": 32,
-   "with_places": []
+   "with_places": [
+    {
+     "starts_at": "2026-11-07T19:30:00",
+     "max_on_sale": 14,
+     "places": 32,
+     "price": 35.88,
+     "first_on_sale": "2026-11-07T11:15:15+00:00"
+    }
+   ]
   },
   "rent-tom-stoppard": {
-   "performances": 18,
+   "performances": 20,
    "places": 14,
    "with_places": [
     {
@@ -165,11 +173,18 @@
      "places": 14,
      "price": 20.0,
      "first_on_sale": "2026-10-30T11:04:08+00:00"
+    },
+    {
+     "starts_at": "2026-11-07T19:30:00",
+     "max_on_sale": 12,
+     "places": 14,
+     "price": 20.0,
+     "first_on_sale": "2026-11-07T11:16:13+00:00"
     }
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 16,
+   "performances": 18,
    "places": 33,
    "with_places": [
     {
@@ -283,11 +298,25 @@
      "places": 33,
      "price": 20.5,
      "first_on_sale": "2026-11-06T12:14:01+00:00"
+    },
+    {
+     "starts_at": "2026-11-14T14:30:00",
+     "max_on_sale": 26,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-07T11:20:11+00:00"
+    },
+    {
+     "starts_at": "2026-11-14T19:30:00",
+     "max_on_sale": 26,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-07T11:20:17+00:00"
     }
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 14,
+   "performances": 16,
    "places": 12,
    "with_places": []
   }
