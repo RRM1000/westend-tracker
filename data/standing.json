@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-07T11:22:32Z",
+ "generated_at": "2026-11-08T11:28:48Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 55,
+   "performances": 56,
    "places": 29,
    "with_places": []
   },
@@ -146,7 +146,7 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 20,
+   "performances": 21,
    "places": 53,
    "with_places": []
   },
