@@ -45,7 +45,10 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          playwright install --with-deps chromium
+          # Three tries a minute apart: on 11 Nov 2026 the runners couldn't
+          # reach Ubuntu's package mirrors for three hours, and every run
+          # failed here before reading anything.
+          for i in 1 2 3; do playwright install --with-deps chromium && break; [ $i = 3 ] && exit 1; sleep 60; done
 
       - name: Run unit tests
         # A broken parser must not be allowed to write bad data every night.
