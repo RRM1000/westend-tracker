@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-10T12:35:01Z",
+ "generated_at": "2026-11-11T12:10:06Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 57,
+   "performances": 59,
    "places": 29,
    "with_places": []
   },
@@ -119,7 +119,7 @@
    ]
   },
   "cabaret-playhouse": {
-   "performances": 50,
+   "performances": 52,
    "places": 4,
    "with_places": [
     {
@@ -146,12 +146,12 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 22,
+   "performances": 23,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 20,
+   "performances": 22,
    "places": 32,
    "with_places": [
     {
@@ -160,11 +160,18 @@
      "places": 32,
      "price": 35.88,
      "first_on_sale": "2026-11-07T11:15:15+00:00"
+    },
+    {
+     "starts_at": "2026-11-11T19:00:00",
+     "max_on_sale": 30,
+     "places": 32,
+     "price": 25.0,
+     "first_on_sale": "2026-11-11T12:02:50+00:00"
     }
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 22,
+   "performances": 23,
    "places": 14,
    "with_places": [
     {
@@ -184,7 +191,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 19,
+   "performances": 21,
    "places": 33,
    "with_places": [
     {
@@ -287,7 +294,7 @@
     },
     {
      "starts_at": "2026-11-12T19:30:00",
-     "max_on_sale": 26,
+     "max_on_sale": 29,
      "places": 33,
      "price": 20.5,
      "first_on_sale": "2026-11-06T12:13:52+00:00"
@@ -301,7 +308,7 @@
     },
     {
      "starts_at": "2026-11-14T14:30:00",
-     "max_on_sale": 26,
+     "max_on_sale": 28,
      "places": 33,
      "price": 20.5,
      "first_on_sale": "2026-11-07T11:20:11+00:00"
@@ -316,7 +323,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 19,
+   "performances": 21,
    "places": 12,
    "with_places": []
   }
