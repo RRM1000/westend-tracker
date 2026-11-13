@@ -1,23 +1,16 @@
 {
- "generated_at": "2026-11-12T12:35:35Z",
+ "generated_at": "2026-11-13T12:29:21Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 60,
+   "performances": 61,
    "places": 29,
    "with_places": []
   },
   "les-miserables-sondheim": {
    "performances": 15,
-   "places": 15,
+   "places": 14,
    "with_places": [
-    {
-     "starts_at": "2026-09-28T19:30:00",
-     "max_on_sale": 15,
-     "places": 15,
-     "price": 20.0,
-     "first_on_sale": "2026-09-28T10:44:58+00:00"
-    },
     {
      "starts_at": "2026-09-29T19:30:00",
      "max_on_sale": 12,
@@ -115,11 +108,18 @@
      "places": 9,
      "price": 20.0,
      "first_on_sale": "2026-10-24T09:00:21+00:00"
+    },
+    {
+     "starts_at": "2026-11-13T19:30:00",
+     "max_on_sale": 4,
+     "places": 4,
+     "price": 20.0,
+     "first_on_sale": "2026-11-13T12:28:29+00:00"
     }
    ]
   },
   "cabaret-playhouse": {
-   "performances": 53,
+   "performances": 54,
    "places": 4,
    "with_places": [
     {
@@ -146,12 +146,12 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 24,
+   "performances": 26,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 24,
+   "performances": 25,
    "places": 32,
    "with_places": [
     {
@@ -167,11 +167,18 @@
      "places": 32,
      "price": 25.0,
      "first_on_sale": "2026-11-11T12:02:50+00:00"
+    },
+    {
+     "starts_at": "2026-11-13T19:30:00",
+     "max_on_sale": 11,
+     "places": 32,
+     "price": 35.88,
+     "first_on_sale": "2026-11-13T12:12:11+00:00"
     }
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 24,
+   "performances": 26,
    "places": 14,
    "with_places": [
     {
@@ -191,7 +198,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 22,
+   "performances": 23,
    "places": 33,
    "with_places": [
     {
@@ -319,6 +326,41 @@
      "places": 33,
      "price": 20.5,
      "first_on_sale": "2026-11-07T11:20:17+00:00"
+    },
+    {
+     "starts_at": "2026-11-17T19:30:00",
+     "max_on_sale": 14,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-13T12:26:57+00:00"
+    },
+    {
+     "starts_at": "2026-11-18T14:30:00",
+     "max_on_sale": 15,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-13T12:27:04+00:00"
+    },
+    {
+     "starts_at": "2026-11-18T19:30:00",
+     "max_on_sale": 15,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-13T12:27:15+00:00"
+    },
+    {
+     "starts_at": "2026-11-19T19:30:00",
+     "max_on_sale": 15,
+     "places": 33,
+     "price": 20.5,
+     "first_on_sale": "2026-11-13T12:27:20+00:00"
+    },
+    {
+     "starts_at": "2026-11-20T19:30:00",
+     "max_on_sale": 15,
+     "places": 25,
+     "price": 20.5,
+     "first_on_sale": "2026-11-13T12:27:26+00:00"
     }
    ]
   },
