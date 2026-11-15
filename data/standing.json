@@ -1,23 +1,16 @@
 {
- "generated_at": "2026-11-14T11:41:14Z",
+ "generated_at": "2026-11-15T12:12:10Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 62,
+   "performances": 61,
    "places": 29,
    "with_places": []
   },
   "les-miserables-sondheim": {
-   "performances": 15,
+   "performances": 14,
    "places": 14,
    "with_places": [
-    {
-     "starts_at": "2026-09-30T19:30:00",
-     "max_on_sale": 9,
-     "places": 9,
-     "price": 20.0,
-     "first_on_sale": "2026-09-30T10:32:44+00:00"
-    },
     {
      "starts_at": "2026-10-02T19:30:00",
      "max_on_sale": 4,
@@ -146,7 +139,7 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 28,
+   "performances": 29,
    "places": 53,
    "with_places": []
   },
