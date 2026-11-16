@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-15T12:12:10Z",
+ "generated_at": "2026-11-16T12:52:10Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 61,
+   "performances": 60,
    "places": 29,
    "with_places": []
   },
@@ -112,7 +112,7 @@
    ]
   },
   "cabaret-playhouse": {
-   "performances": 56,
+   "performances": 57,
    "places": 4,
    "with_places": [
     {
@@ -144,7 +144,7 @@
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 27,
+   "performances": 28,
    "places": 32,
    "with_places": [
     {
@@ -178,7 +178,7 @@
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 28,
+   "performances": 29,
    "places": 14,
    "with_places": [
     {
@@ -198,7 +198,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 25,
+   "performances": 26,
    "places": 33,
    "with_places": [
     {
@@ -379,9 +379,17 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 24,
+   "performances": 25,
    "places": 12,
-   "with_places": []
+   "with_places": [
+    {
+     "starts_at": "2026-11-21T15:00:00",
+     "max_on_sale": 12,
+     "places": 12,
+     "price": 22.5,
+     "first_on_sale": "2026-11-16T12:48:15+00:00"
+    }
+   ]
   }
  }
 }
