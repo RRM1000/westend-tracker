@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-17T13:13:29Z",
+ "generated_at": "2026-11-18T13:04:26Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
@@ -7,24 +7,37 @@
    "places": 29,
    "with_places": []
   },
-  "les-miserables-sondheim": {
-   "performances": 13,
-   "places": 14,
+  "cabaret-playhouse": {
+   "performances": 60,
+   "places": 4,
    "with_places": [
     {
-     "starts_at": "2026-10-03T14:30:00",
-     "max_on_sale": 1,
-     "places": 1,
-     "price": 20.0,
-     "first_on_sale": "2026-10-03T09:57:57+00:00"
+     "starts_at": "2026-10-09T19:30:00",
+     "max_on_sale": 3,
+     "places": 4,
+     "price": 25.0,
+     "first_on_sale": "2026-10-09T11:28:18+00:00"
     },
     {
-     "starts_at": "2026-10-03T19:30:00",
-     "max_on_sale": 14,
-     "places": 14,
-     "price": 20.0,
-     "first_on_sale": "2026-10-01T11:04:38+00:00"
+     "starts_at": "2026-10-10T19:30:00",
+     "max_on_sale": 2,
+     "places": 4,
+     "price": 25.0,
+     "first_on_sale": "2026-10-10T10:46:00+00:00"
     },
+    {
+     "starts_at": "2026-10-26T19:30:00",
+     "max_on_sale": 4,
+     "places": 4,
+     "price": 25.0,
+     "first_on_sale": "2026-10-26T09:58:44+00:00"
+    }
+   ]
+  },
+  "les-miserables-sondheim": {
+   "performances": 11,
+   "places": 12,
+   "with_places": [
     {
      "starts_at": "2026-10-05T19:30:00",
      "max_on_sale": 9,
@@ -104,40 +117,13 @@
     }
    ]
   },
-  "cabaret-playhouse": {
-   "performances": 58,
-   "places": 4,
-   "with_places": [
-    {
-     "starts_at": "2026-10-09T19:30:00",
-     "max_on_sale": 3,
-     "places": 4,
-     "price": 25.0,
-     "first_on_sale": "2026-10-09T11:28:18+00:00"
-    },
-    {
-     "starts_at": "2026-10-10T19:30:00",
-     "max_on_sale": 2,
-     "places": 4,
-     "price": 25.0,
-     "first_on_sale": "2026-10-10T10:46:00+00:00"
-    },
-    {
-     "starts_at": "2026-10-26T19:30:00",
-     "max_on_sale": 4,
-     "places": 4,
-     "price": 25.0,
-     "first_on_sale": "2026-10-26T09:58:44+00:00"
-    }
-   ]
-  },
   "stranger-things-phoenix": {
-   "performances": 30,
+   "performances": 31,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 29,
+   "performances": 30,
    "places": 32,
    "with_places": [
     {
@@ -171,7 +157,7 @@
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 30,
+   "performances": 31,
    "places": 14,
    "with_places": [
     {
@@ -191,7 +177,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 27,
+   "performances": 29,
    "places": 33,
    "with_places": [
     {
@@ -372,7 +358,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 27,
+   "performances": 28,
    "places": 12,
    "with_places": [
     {
