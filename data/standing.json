@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-11-22T12:42:09Z",
+ "generated_at": "2026-11-23T14:26:08Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 61,
+   "performances": 60,
    "places": 29,
    "with_places": []
   },
@@ -123,7 +123,7 @@
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 35,
+   "performances": 36,
    "places": 32,
    "with_places": [
     {
@@ -178,7 +178,7 @@
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 36,
+   "performances": 37,
    "places": 14,
    "with_places": [
     {
@@ -201,6 +201,13 @@
      "places": 14,
      "price": 20.0,
      "first_on_sale": "2026-11-20T12:52:19+00:00"
+    },
+    {
+     "starts_at": "2026-11-23T19:30:00",
+     "max_on_sale": 12,
+     "places": 14,
+     "price": 20.0,
+     "first_on_sale": "2026-11-23T14:20:32+00:00"
     }
    ]
   },
@@ -442,7 +449,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 32,
+   "performances": 33,
    "places": 12,
    "with_places": [
     {
