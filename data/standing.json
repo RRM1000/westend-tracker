@@ -1,7 +1,12 @@
 {
- "generated_at": "2026-11-26T13:58:26Z",
+ "generated_at": "2026-11-27T13:56:22Z",
  "days": 45,
  "shows": {
+  "lion-king-lyceum": {
+   "performances": 61,
+   "places": 29,
+   "with_places": []
+  },
   "cabaret-playhouse": {
    "performances": 61,
    "places": 4,
@@ -22,22 +27,10 @@
     }
    ]
   },
-  "lion-king-lyceum": {
-   "performances": 60,
-   "places": 29,
-   "with_places": []
-  },
   "les-miserables-sondheim": {
    "performances": 8,
-   "places": 10,
+   "places": 9,
    "with_places": [
-    {
-     "starts_at": "2026-10-12T19:30:00",
-     "max_on_sale": 10,
-     "places": 10,
-     "price": 20.0,
-     "first_on_sale": "2026-10-12T11:58:52+00:00"
-    },
     {
      "starts_at": "2026-10-17T14:30:00",
      "max_on_sale": 9,
@@ -86,16 +79,23 @@
      "places": 3,
      "price": 20.0,
      "first_on_sale": "2026-11-20T12:57:06+00:00"
+    },
+    {
+     "starts_at": "2026-11-28T14:30:00",
+     "max_on_sale": 1,
+     "places": 1,
+     "price": 20.0,
+     "first_on_sale": "2026-11-27T13:55:32+00:00"
     }
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 40,
+   "performances": 42,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 40,
+   "performances": 41,
    "places": 32,
    "with_places": [
     {
@@ -150,7 +150,7 @@
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 40,
+   "performances": 42,
    "places": 14,
    "with_places": [
     {
@@ -180,11 +180,18 @@
      "places": 14,
      "price": 20.0,
      "first_on_sale": "2026-11-23T14:20:32+00:00"
+    },
+    {
+     "starts_at": "2026-11-27T14:30:00",
+     "max_on_sale": 12,
+     "places": 14,
+     "price": 20.0,
+     "first_on_sale": "2026-11-27T13:50:34+00:00"
     }
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 37,
+   "performances": 38,
    "places": 33,
    "with_places": [
     {
@@ -421,7 +428,7 @@
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 37,
+   "performances": 38,
    "places": 12,
    "with_places": [
     {
@@ -437,6 +444,13 @@
      "places": 12,
      "price": 22.5,
      "first_on_sale": "2026-11-26T13:53:33+00:00"
+    },
+    {
+     "starts_at": "2026-11-28T19:30:00",
+     "max_on_sale": 12,
+     "places": 12,
+     "price": 22.5,
+     "first_on_sale": "2026-11-27T13:51:53+00:00"
     }
    ]
   },
