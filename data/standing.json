@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-11-27T13:56:22Z",
+ "generated_at": "2026-11-28T13:11:28Z",
  "days": 45,
  "shows": {
   "lion-king-lyceum": {
-   "performances": 61,
+   "performances": 62,
    "places": 29,
    "with_places": []
   },
   "cabaret-playhouse": {
-   "performances": 61,
+   "performances": 62,
    "places": 4,
    "with_places": [
     {
@@ -90,12 +90,12 @@
    ]
   },
   "stranger-things-phoenix": {
-   "performances": 42,
+   "performances": 44,
    "places": 53,
    "with_places": []
   },
   "moulin-rouge-piccadilly": {
-   "performances": 41,
+   "performances": 43,
    "places": 32,
    "with_places": [
     {
@@ -146,11 +146,18 @@
      "places": 32,
      "price": 30.75,
      "first_on_sale": "2026-11-20T12:51:33+00:00"
+    },
+    {
+     "starts_at": "2026-11-28T14:30:00",
+     "max_on_sale": 16,
+     "places": 32,
+     "price": 35.88,
+     "first_on_sale": "2026-11-28T13:04:04+00:00"
     }
    ]
   },
   "rent-tom-stoppard": {
-   "performances": 42,
+   "performances": 44,
    "places": 14,
    "with_places": [
     {
@@ -191,7 +198,7 @@
    ]
   },
   "cherry-orchard-harold-pinter": {
-   "performances": 38,
+   "performances": 40,
    "places": 33,
    "with_places": [
     {
@@ -414,21 +421,70 @@
     {
      "starts_at": "2026-11-28T14:30:00",
      "max_on_sale": 14,
-     "places": 15,
+     "places": 21,
      "price": 20.5,
      "first_on_sale": "2026-11-21T12:18:00+00:00"
     },
     {
      "starts_at": "2026-11-28T19:30:00",
      "max_on_sale": 13,
-     "places": 15,
+     "places": 21,
      "price": 20.5,
      "first_on_sale": "2026-11-21T12:18:07+00:00"
+    },
+    {
+     "starts_at": "2026-12-01T19:30:00",
+     "max_on_sale": 13,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:08:38+00:00"
+    },
+    {
+     "starts_at": "2026-12-02T14:30:00",
+     "max_on_sale": 15,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:08:45+00:00"
+    },
+    {
+     "starts_at": "2026-12-02T19:30:00",
+     "max_on_sale": 15,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:08:51+00:00"
+    },
+    {
+     "starts_at": "2026-12-03T19:30:00",
+     "max_on_sale": 15,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:08:59+00:00"
+    },
+    {
+     "starts_at": "2026-12-04T19:30:00",
+     "max_on_sale": 14,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:09:04+00:00"
+    },
+    {
+     "starts_at": "2026-12-05T14:30:00",
+     "max_on_sale": 14,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:09:10+00:00"
+    },
+    {
+     "starts_at": "2026-12-05T19:30:00",
+     "max_on_sale": 13,
+     "places": 15,
+     "price": 20.5,
+     "first_on_sale": "2026-11-28T13:09:18+00:00"
     }
    ]
   },
   "operation-mincemeat-fortune": {
-   "performances": 38,
+   "performances": 40,
    "places": 12,
    "with_places": [
     {
